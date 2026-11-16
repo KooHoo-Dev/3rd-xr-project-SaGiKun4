@@ -80,9 +80,8 @@ namespace StudyXR.PiggySmash.EditorTools
             var mallet = example.Find("Mallet");
             if (mallet != null)
             {
-                mallet.gameObject.tag = DestroyerTag;
-                PrefabUtility.RecordPrefabInstancePropertyModifications(mallet.gameObject);
                 if (mallet.GetComponent<ReturnHome>() == null) mallet.gameObject.AddComponent<ReturnHome>();
+                SetupHeadHitter(mallet);
             }
 
             // 5. 테이블 범위 (망치·거치대 제외 — 점수판 높이 기준)
@@ -129,6 +128,74 @@ namespace StudyXR.PiggySmash.EditorTools
             Debug.Log($"[Piggy Smash] 변환 완료. 빠진 스크립트 {removed}개 제거. " +
                       $"Rig={viewer:F2}, " +
                       $"Spawn={spawnPose.position:F2}, Table={area.center:F2}/{area.size:F2}, Game={gameRoot.transform.position:F2}");
+        }
+
+        // ───────────────────────── 망치 헤드 타격 판정 ─────────────────────────
+
+        [MenuItem("Tools/Piggy Smash/Setup Mallet Head Hitter (Open Scene)")]
+        public static void SetupMalletsInOpenScene()
+        {
+            EnsureTag(DestroyerTag);
+            var scene = SceneManager.GetActiveScene();
+            int count = 0;
+            foreach (var go in scene.GetRootGameObjects())
+                foreach (var t in go.GetComponentsInChildren<Transform>(true))
+                    if (t.name == "Mallet" && t.GetComponent<Rigidbody>() != null && SetupHeadHitter(t)) count++;
+
+            if (count > 0)
+            {
+                EditorSceneManager.MarkSceneDirty(scene);
+                EditorSceneManager.SaveScene(scene);
+            }
+            Debug.Log($"[Piggy Smash] 망치 {count}개에 Head Hitter 를 설정했습니다.");
+        }
+
+        /// <summary>
+        /// 망치 헤드의 Box Collider 를 복제해 'Head Hitter' 자식으로 분리한다.
+        /// Head Hitter: Kinematic Rigidbody + Box Collider + MalletHitter + Destroyer 태그 (운동량이 클 때만 켜짐)
+        /// 망치 본체: Destroyer 태그 제거 → 그냥 닿기만 해서는 부서지지 않음.
+        /// 원래 헤드 Box 는 물리용(테이블 위에 놓이고 저금통을 밀기)으로 그대로 둔다.
+        /// </summary>
+        private static bool SetupHeadHitter(Transform mallet)
+        {
+            var collision = FindChild(mallet, "Collision");
+            var headBox = collision != null ? collision.GetComponent<BoxCollider>() : mallet.GetComponentInChildren<BoxCollider>(true);
+            if (headBox == null)
+            {
+                Debug.LogWarning($"[Piggy Smash] {mallet.name} 에서 헤드 Box Collider 를 찾지 못했습니다.", mallet);
+                return false;
+            }
+
+            // 본체는 더 이상 '부수는 물체'가 아님
+            mallet.gameObject.tag = "Untagged";
+            PrefabUtility.RecordPrefabInstancePropertyModifications(mallet.gameObject);
+
+            // 기존 Head Hitter 가 있으면 다시 만든다
+            var old = FindChild(mallet, "Head Hitter");
+            if (old != null) Object.DestroyImmediate(old.gameObject);
+
+            var hitter = new GameObject("Head Hitter");
+            hitter.tag = DestroyerTag;
+            hitter.layer = headBox.gameObject.layer;
+            hitter.transform.SetParent(headBox.transform, false);
+
+            var box = hitter.AddComponent<BoxCollider>();
+            box.center = headBox.center;
+            box.size = headBox.size * 1.1f; // 물리용 헤드보다 살짝 크게 → 먼저 닿도록
+            box.enabled = false;
+
+            var rb = hitter.AddComponent<Rigidbody>();
+            rb.isKinematic = true;
+            rb.useGravity = false;
+            rb.interpolation = RigidbodyInterpolation.None;
+            rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+
+            var mh = hitter.AddComponent<MalletHitter>();
+            var so = new SerializedObject(mh);
+            so.FindProperty("hitCollider").objectReferenceValue = box;
+            so.FindProperty("ownerBody").objectReferenceValue = mallet.GetComponent<Rigidbody>();
+            so.ApplyModifiedPropertiesWithoutUndo();
+            return true;
         }
 
         private static Transform FindChild(Transform parent, string name)
