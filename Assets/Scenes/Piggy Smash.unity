@@ -719,7 +719,7 @@ MonoBehaviour:
   - {fileID: 740130725}
   pointsPerBreak: 1
   respawnDelay: 1
-  shardLifetime: 3
+  shardLifetime: 2
   popInSeconds: 0.25
   spawnClip: {fileID: 0}
   maxDistanceFromSpawn: 2

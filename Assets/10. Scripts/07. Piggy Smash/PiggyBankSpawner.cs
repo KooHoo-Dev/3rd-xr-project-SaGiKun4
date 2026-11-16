@@ -20,8 +20,10 @@ namespace StudyXR.PiggySmash
         [Header("규칙")]
         [SerializeField] private int pointsPerBreak = 1;
         [SerializeField] private float respawnDelay = 1.0f;
-        [Tooltip("부서진 조각들을 정리하기까지의 시간")]
-        [SerializeField] private float shardLifetime = 3.0f;
+        [Tooltip("깨진 저금통(PiggyBank_Shattered)이 생성된 뒤 사라지기까지의 시간 (초)")]
+        [SerializeField] private float shardLifetime = 2.0f;
+        [Tooltip("사라지기 직전 조각들이 작아지는 시간 (shardLifetime 에 포함)")]
+        [SerializeField] private float shardShrinkSeconds = 0.4f;
 
         [Header("생성 연출")]
         [SerializeField] private float popInSeconds = 0.25f;
@@ -104,7 +106,20 @@ namespace StudyXR.PiggySmash
             Vector3 position = current != null ? current.transform.position : brokenVersion.transform.position;
             current = null;
 
-            if (brokenVersion != null) Destroy(brokenVersion, shardLifetime);
+            if (brokenVersion != null)
+            {
+                // PiggyBank_Shattered 에 붙은 Unbreakable 은 1초 뒤 조각을 되감아 새 저금통을 만든다.
+                // 스포너가 새 저금통을 따로 생성하므로, 되감기를 막고 조각은 그대로 사라지게 한다.
+                var restore = brokenVersion.GetComponent<Unbreakable>();
+                if (restore != null)
+                {
+                    restore.enabled = false; // 즉시 멈춤 (Destroy 는 프레임 끝에 처리됨)
+                    Destroy(restore);
+                }
+
+                StartCoroutine(RemoveShards(brokenVersion));
+                Destroy(brokenVersion, shardLifetime + 0.1f); // 스포너가 꺼져 코루틴이 멈춰도 확실히 정리
+            }
             if (game != null) game.AddPoints(pointsPerBreak, position + Vector3.up * 0.25f);
 
             bool keepGoing = (game == null) || game.IsRunning;
@@ -116,6 +131,31 @@ namespace StudyXR.PiggySmash
             yield return new WaitForSeconds(delay);
             respawnRoutine = null;
             if (game == null || game.IsRunning) Spawn();
+        }
+
+        // 깨진 버전을 shardLifetime 뒤에 제거. 마지막 shardShrinkSeconds 동안 조각들을 작게 줄인다.
+        private IEnumerator RemoveShards(GameObject broken)
+        {
+            float shrink = Mathf.Clamp(shardShrinkSeconds, 0f, shardLifetime);
+            yield return new WaitForSeconds(shardLifetime - shrink);
+            if (broken == null) yield break;
+
+            if (shrink > 0f)
+            {
+                var pieces = broken.GetComponentsInChildren<Transform>();
+                var scales = new Vector3[pieces.Length];
+                for (int i = 0; i < pieces.Length; ++i) scales[i] = pieces[i].localScale;
+
+                for (float t = 0f; t < shrink && broken != null; t += Time.deltaTime)
+                {
+                    float k = 1f - t / shrink;
+                    for (int i = 0; i < pieces.Length; ++i)
+                        if (pieces[i] != null && pieces[i] != broken.transform) pieces[i].localScale = scales[i] * k;
+                    yield return null;
+                }
+            }
+
+            if (broken != null) Destroy(broken);
         }
 
         private void ClearCurrent()
