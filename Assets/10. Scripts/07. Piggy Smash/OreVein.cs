@@ -19,6 +19,18 @@ namespace StudyXR.PiggySmash
         [SerializeField] private float hitCooldown = 0.3f;
         [SerializeField] private AudioClip hitClip;
 
+        [Header("돌 크기 (돌을 깎아 광물이 드러나는 느낌)")]
+        [Tooltip("크기를 바꿀 돌 부분 자식 이름. 광물 부분(Ore_low)은 그대로 둔다")]
+        [SerializeField] private string rockName = "Rock_low";
+        [Tooltip("생성 직후 돌 크기 배율")]
+        [SerializeField] private float rockStartScale = 1.3f;
+        [Tooltip("전체 타수의 절반을 때렸을 때 배율")]
+        [SerializeField] private float rockHalfScale = 1.15f;
+        [Tooltip("1타 남았을 때 배율 (원래 크기)")]
+        [SerializeField] private float rockLastScale = 1f;
+        [Tooltip("배율이 바뀔 때 부드럽게 줄어드는 시간 (초)")]
+        [SerializeField] private float rockScaleSeconds = 0.15f;
+
         [Header("금 가는 표현")]
         [Tooltip("OreCrack 머티리얼. 맞을 때마다 금이 더 많이 드러난다")]
         [SerializeField] private Material crackMaterial;
@@ -49,6 +61,11 @@ namespace StudyXR.PiggySmash
         private Coroutine punch;
         private Vector3 punchScale, punchPos;
         private static readonly int CrackId = Shader.PropertyToID("_Crack");
+
+        private Transform rock;
+        private Vector3 rockBaseScale;
+        private Coroutine rockAnim;
+        private BoxCollider autoBox;
 
         public string OreName => oreName;
         public int Points => points;
@@ -89,6 +106,13 @@ namespace StudyXR.PiggySmash
 
         private void Awake()
         {
+            // 돌 부분을 먼저 키워 두고 콜라이더를 맞춘다 (광물 부분은 원래 크기 유지)
+            rock = FindChild(transform, rockName);
+            if (rock != null)
+            {
+                rockBaseScale = rock.localScale;
+                rock.localScale = rockBaseScale * rockStartScale;
+            }
             EnsurePhysics();
         }
 
@@ -113,6 +137,7 @@ namespace StudyXR.PiggySmash
             }
 
             SetCrack((float)hits / hitsToMine);
+            ScaleRock(RockFactor(hits, hitsToMine));
             if (hitClip != null) AudioSource.PlayClipAtPoint(hitClip, transform.position);
             Hit?.Invoke(this, hits);
             StopPunch();
@@ -273,10 +298,11 @@ namespace StudyXR.PiggySmash
             body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
         }
 
-        private void FitBoxCollider()
+        // 모든 자식 메시를 감싸는 범위 (이 오브젝트의 로컬 공간)
+        private bool TryGetLocalMeshBounds(out Bounds local)
         {
             bool found = false;
-            Bounds local = default;
+            local = default;
             foreach (var mf in GetComponentsInChildren<MeshFilter>())
             {
                 if (mf.sharedMesh == null) continue;
@@ -289,11 +315,65 @@ namespace StudyXR.PiggySmash
                     else local.Encapsulate(p);
                 }
             }
-            if (found == false) return;
+            return found;
+        }
 
-            var box = gameObject.AddComponent<BoxCollider>();
-            box.center = local.center;
-            box.size = local.size;
+        private void FitBoxCollider()
+        {
+            if (TryGetLocalMeshBounds(out Bounds local) == false) return;
+
+            autoBox = gameObject.AddComponent<BoxCollider>();
+            autoBox.center = local.center;
+            autoBox.size = local.size;
+        }
+
+        // 자동으로 만든 콜라이더를 현재 메시 크기(돌이 줄어든 크기)에 다시 맞춘다
+        private void RefitBox()
+        {
+            if (autoBox == null || mined) return;
+            if (TryGetLocalMeshBounds(out Bounds local) == false) return;
+            autoBox.center = local.center;
+            autoBox.size = local.size;
+        }
+
+        // 타격 수에 따른 돌 배율: 0타 1.3 → 절반 1.15 → 1타 남았을 때 1.0 (구간별 선형)
+        private float RockFactor(int hitCount, int required)
+        {
+            if (required <= 1) return rockStartScale;
+            if (hitCount >= required - 1) return rockLastScale;
+
+            float p = (float)hitCount / required;
+            float lastP = (float)(required - 1) / required;
+            if (p <= 0.5f) return Mathf.Lerp(rockStartScale, rockHalfScale, p / 0.5f);
+            return Mathf.Lerp(rockHalfScale, rockLastScale, (p - 0.5f) / Mathf.Max(1e-4f, lastP - 0.5f));
+        }
+
+        private void ScaleRock(float factor)
+        {
+            if (rock == null) return;
+            if (rockAnim != null) StopCoroutine(rockAnim);
+            rockAnim = StartCoroutine(AnimateRock(rockBaseScale * factor));
+        }
+
+        private IEnumerator AnimateRock(Vector3 target)
+        {
+            Vector3 from = rock.localScale;
+            for (float t = 0f; t < rockScaleSeconds; t += Time.deltaTime)
+            {
+                rock.localScale = Vector3.Lerp(from, target, Mathf.SmoothStep(0f, 1f, t / rockScaleSeconds));
+                yield return null;
+            }
+            rock.localScale = target;
+            rockAnim = null;
+            RefitBox();
+        }
+
+        private static Transform FindChild(Transform parent, string name)
+        {
+            if (string.IsNullOrEmpty(name)) return null;
+            foreach (var t in parent.GetComponentsInChildren<Transform>(true))
+                if (t != parent && t.name == name) return t;
+            return null;
         }
     }
 }
