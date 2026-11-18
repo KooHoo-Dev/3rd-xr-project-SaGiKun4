@@ -286,7 +286,7 @@ namespace StudyXR.PiggySmash.EditorTools
             var point = new GameObject("Spawn Point").transform;
             point.SetParent(spawnerGo.transform, false);
             point.SetPositionAndRotation(spawnPose.position, spawnPose.rotation);
-            var spawner = spawnerGo.AddComponent<PiggyBankSpawner>();
+            var spawner = spawnerGo.AddComponent<OreSpawner>();
 
             var so = new SerializedObject(game);
             so.FindProperty("boardText").objectReferenceValue = board;
@@ -294,7 +294,6 @@ namespace StudyXR.PiggySmash.EditorTools
 
             so = new SerializedObject(spawner);
             so.FindProperty("game").objectReferenceValue = game;
-            so.FindProperty("piggyPrefab").objectReferenceValue = piggyPrefab;
             var points = so.FindProperty("spawnPoints");
             points.arraySize = 1;
             points.GetArrayElementAtIndex(0).objectReferenceValue = point;

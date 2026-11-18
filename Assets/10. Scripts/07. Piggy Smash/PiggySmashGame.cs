@@ -6,13 +6,14 @@ using UnityEngine.InputSystem;
 namespace StudyXR.PiggySmash
 {
     /// <summary>
-    /// 저금통 부수기 게임의 점수 / 라운드 / 점수판을 관리한다.
+    /// 광맥 채굴 게임의 점수 / 라운드 / 점수판을 관리한다.
     /// roundSeconds 가 0 이하이면 시간 제한 없는 무한 모드.
     /// </summary>
     public class PiggySmashGame : MonoBehaviour
     {
         [Header("표시")]
         [SerializeField] private TMP_Text boardText;
+        [SerializeField] private string title = "ORE SMASH";
 
         [Header("라운드")]
         [Tooltip("0 이하이면 시간 제한 없음")]
@@ -113,13 +114,19 @@ namespace StudyXR.PiggySmash
             RefreshBoard();
         }
 
-        /// <summary>저금통이 부서졌을 때 스포너가 호출한다.</summary>
+        /// <summary>광맥을 캤을 때 스포너가 호출한다.</summary>
         public void AddPoints(int points, Vector3 worldPosition)
+        {
+            AddPoints(points, worldPosition, popupColor);
+        }
+
+        /// <summary>광맥 종류별 색으로 점수 팝업을 띄운다.</summary>
+        public void AddPoints(int points, Vector3 worldPosition, Color color)
         {
             if (IsRunning == false) return;
             score += points;
             breakCount++;
-            if (showPopup) ScorePopup.Spawn("+" + points, worldPosition, popupColor);
+            if (showPopup) ScorePopup.Spawn("+" + points, worldPosition, color);
             RefreshBoard();
         }
 
@@ -136,14 +143,14 @@ namespace StudyXR.PiggySmash
             if (IsRunning)
             {
                 boardText.text =
-                    $"<size=60%>PIGGY SMASH</size>\n" +
+                    $"<size=60%>{title}</size>\n" +
                     $"SCORE  {score}\n" +
                     $"<size=70%>{time}   |   BEST  {best}</size>";
             }
             else
             {
                 boardText.text =
-                    $"<size=60%>PIGGY SMASH</size>\n" +
+                    $"<size=60%>{title}</size>\n" +
                     $"{(breakCount > 0 ? $"FINAL  {score}" : "READY")}\n" +
                     $"<size=60%>BEST  {best}   |   A / R : START</size>";
             }
