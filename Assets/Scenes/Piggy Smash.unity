@@ -571,16 +571,19 @@ MonoBehaviour:
   - name: Bronze
     prefab: {fileID: 3176191598947822011, guid: 67faaefcbe80e034d9d7a1130d3cd4bf, type: 3}
     points: 1
+    hitsToMine: 1
     weight: 6
     popupColor: {r: 0.85, g: 0.55, b: 0.3, a: 1}
   - name: Silver
     prefab: {fileID: 9037540739256695866, guid: b755796dfafc2ef458a46f492a6b71f0, type: 3}
     points: 5
+    hitsToMine: 3
     weight: 3
     popupColor: {r: 0.85, g: 0.9, b: 1, a: 1}
   - name: Gold
     prefab: {fileID: 4778066955128460072, guid: ca0870e179e3b9c4191afdce7ec54f41, type: 3}
     points: 10
+    hitsToMine: 5
     weight: 1
     popupColor: {r: 1, g: 0.84, b: 0.2, a: 1}
   spawnPoints:
@@ -596,6 +599,12 @@ MonoBehaviour:
   maxPerWave: 3
   maxAlive: 0
   fitSize: 0.35
+  sinkTarget: {fileID: 1619804830}
+  sinkTargetName: Fireplace_Logs
+  flySeconds: 0.9
+  arcHeight: 0.6
+  crackMaterial: {fileID: 2100000, guid: 3bde0b61d4804139b588839c8959f376, type: 2}
+  hitClip: {fileID: 0}
   popInSeconds: 0.25
   spawnClip: {fileID: 0}
   breakEffect: {fileID: 0}
@@ -941,6 +950,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1155406654}
   - component: {fileID: 1155406655}
+  - component: {fileID: 1155406660}
   m_Layer: 0
   m_Name: Piggy Smash Game
   m_TagString: Untagged
@@ -984,6 +994,24 @@ MonoBehaviour:
   showPopup: 1
   popupColor: {r: 1, g: 0.85, b: 0.2, a: 1}
   useRestartInput: 1
+--- !u!114 &1155406660
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1155406653}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5f15303a18c42f2986b679b4f8e8158, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StudyXR.PiggySmash.OvenDoorOpener
+  game: {fileID: 1155406655}
+  door: {fileID: 0}
+  doorName: OvenDoor
+  openAngle: 35
+  openSeconds: 0.6
+  closeOnRoundEnd: 1
 --- !u!1001 &1485689320
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -19,6 +19,8 @@ namespace StudyXR.PiggySmash
             public string name = "Bronze";
             public GameObject prefab;
             [Min(0)] public int points = 1;
+            [Tooltip("캐기까지 때려야 하는 횟수")]
+            [Min(1)] public int hitsToMine = 1;
             [Tooltip("뽑힐 확률 가중치. 클수록 자주 나온다")]
             [Min(0f)] public float weight = 1f;
             public Color popupColor = Color.white;
@@ -56,6 +58,21 @@ namespace StudyXR.PiggySmash
         [Tooltip("광맥의 가장 긴 변을 이 길이(m)로 맞춘다. 0 이면 프리팹 크기 그대로")]
         [SerializeField] private float fitSize = 0.35f;
 
+        [Header("채굴 후 빨려들어갈 곳")]
+        [Tooltip("채굴된 광맥이 날아갈 대상. 비우면 아래 이름으로 씬에서 찾는다")]
+        [SerializeField] private Transform sinkTarget;
+        [SerializeField] private string sinkTargetName = "Fireplace_Logs";
+        [Tooltip("대상까지 날아가는 시간 (초)")]
+        [SerializeField] private float flySeconds = 0.9f;
+        [Tooltip("날아가는 궤적의 최고 높이 (m)")]
+        [SerializeField] private float arcHeight = 0.6f;
+
+        [Header("금 가는 표현")]
+        [Tooltip("OreCrack 머티리얼 (Assets/10. Scripts/07. Piggy Smash/Crack/OreCrack.mat)")]
+        [SerializeField] private Material crackMaterial;
+        [Tooltip("캐지지 않은 타격마다 나는 소리")]
+        [SerializeField] private AudioClip hitClip;
+
         [Header("연출")]
         [SerializeField] private float popInSeconds = 0.25f;
         [SerializeField] private AudioClip spawnClip;
@@ -82,6 +99,16 @@ namespace StudyXR.PiggySmash
                 game.RoundEnded -= OnRoundEnded;
             }
             StopLoop();
+        }
+
+        private void Awake()
+        {
+            if (sinkTarget == null && string.IsNullOrEmpty(sinkTargetName) == false)
+            {
+                var found = GameObject.Find(sinkTargetName);
+                if (found != null) sinkTarget = found.transform;
+                else Debug.LogWarning($"[OreSpawner] '{sinkTargetName}' 를 찾지 못해 광맥이 제자리에서 사라집니다.", this);
+            }
         }
 
         private void Start()
@@ -153,6 +180,8 @@ namespace StudyXR.PiggySmash
             var vein = go.GetComponent<OreVein>();
             if (vein == null) vein = go.AddComponent<OreVein>();
             vein.Setup(type.name, type.points, breakEffect, breakClip);
+            vein.SetupSink(sinkTarget, flySeconds, arcHeight);
+            vein.SetupHits(type.hitsToMine, crackMaterial, hitClip);
             vein.Mined += (v, breaker) => OnMined(v, type);
             alive.Add(vein);
 
@@ -322,11 +351,11 @@ namespace StudyXR.PiggySmash
             const string dir = "Assets/Metal Ore/Prefabs/";
             ores = new List<OreType>
             {
-                new OreType { name = "Bronze", points = 1,  weight = 6f, popupColor = new Color(0.85f, 0.55f, 0.3f),
+                new OreType { name = "Bronze", points = 1,  hitsToMine = 1, weight = 6f, popupColor = new Color(0.85f, 0.55f, 0.3f),
                               prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(dir + "Bronze.prefab") },
-                new OreType { name = "Silver", points = 5,  weight = 3f, popupColor = new Color(0.85f, 0.9f, 1f),
+                new OreType { name = "Silver", points = 5,  hitsToMine = 3, weight = 3f, popupColor = new Color(0.85f, 0.9f, 1f),
                               prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(dir + "Silver.prefab") },
-                new OreType { name = "Gold",   points = 10, weight = 1f, popupColor = new Color(1f, 0.84f, 0.2f),
+                new OreType { name = "Gold",   points = 10, hitsToMine = 5, weight = 1f, popupColor = new Color(1f, 0.84f, 0.2f),
                               prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(dir + "Gold.prefab") },
             };
             UnityEditor.EditorUtility.SetDirty(this);
