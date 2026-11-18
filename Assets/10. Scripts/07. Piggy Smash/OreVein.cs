@@ -30,6 +30,10 @@ namespace StudyXR.PiggySmash
         [SerializeField] private float rockLastScale = 1f;
         [Tooltip("배율이 바뀔 때 부드럽게 줄어드는 시간 (초)")]
         [SerializeField] private float rockScaleSeconds = 0.15f;
+        [Tooltip("캐는 마지막 타격에서 돌이 원래 크기로 줄어드는 시간 (초)")]
+        [SerializeField] private float revealSeconds = 0.2f;
+        [Tooltip("광물이 드러난 뒤 날아가기 전까지 보여 주는 시간 (초)")]
+        [SerializeField] private float revealHoldSeconds = 0.1f;
 
         [Header("금 가는 표현")]
         [Tooltip("OreCrack 머티리얼. 맞을 때마다 금이 더 많이 드러난다")]
@@ -214,7 +218,7 @@ namespace StudyXR.PiggySmash
             if (breakClip != null) AudioSource.PlayClipAtPoint(breakClip, transform.position);
 
             Mined?.Invoke(this, breaker);
-            StartCoroutine(sinkTarget != null ? FlyIntoTarget() : BreakAway());
+            StartCoroutine(MineSequence());
         }
 
         // 채굴된 순간부터 어떤 것과도 부딪히지 않게: 콜라이더 끄기 + Rigidbody 를 물리에서 빼기
@@ -230,6 +234,33 @@ namespace StudyXR.PiggySmash
         }
 
         // 맞은 자리에서 움찔 → 포물선을 그리며 대상 쪽으로 가속 → 돌면서 작아지며 빨려들어감
+        // 마지막 타격: 돌을 원래 크기로 줄여 광물을 드러내고 잠깐 보여 준 뒤 날아간다
+        private IEnumerator MineSequence()
+        {
+            yield return RevealOre();
+            yield return sinkTarget != null ? FlyIntoTarget() : BreakAway();
+        }
+
+        private IEnumerator RevealOre()
+        {
+            if (rock == null) yield break;
+            if (rockAnim != null) StopCoroutine(rockAnim);
+            rockAnim = null;
+
+            Vector3 from = rock.localScale;
+            Vector3 target = rockBaseScale * rockLastScale;
+            if ((from - target).sqrMagnitude > 1e-6f)
+            {
+                for (float t = 0f; t < revealSeconds; t += Time.deltaTime)
+                {
+                    rock.localScale = Vector3.Lerp(from, target, Mathf.SmoothStep(0f, 1f, t / revealSeconds));
+                    yield return null;
+                }
+                rock.localScale = target;
+            }
+            if (revealHoldSeconds > 0f) yield return new WaitForSeconds(revealHoldSeconds);
+        }
+
         private IEnumerator FlyIntoTarget()
         {
             Vector3 startScale = transform.localScale;
