@@ -16,7 +16,7 @@ namespace StudyXR.PiggySmash.EditorTools
     /// - Convert Lab Scene: 랩 씬 복사본(Piggy Smash.unity)에서 PiggyBankExample 만 남기고 나머지를 지운 뒤 게임 로직을 붙인다.
     /// - Build Game In Open Scene: 열린 씬의 선택한 테이블(없으면 새 큐브) 위에 게임을 배치한다.
     /// </summary>
-    public static class PiggySmashSetup
+    public static partial class PiggySmashSetup
     {
         private const string PiggyPath = "Assets/XRI_Examples/Props/Prefabs/PiggyBank_Breakable.prefab";
         private const string MalletPath = "Assets/XRI_Examples/GrabInteractables/Prefabs/Mallet.prefab";
@@ -292,9 +292,15 @@ namespace StudyXR.PiggySmash.EditorTools
             Undo.SetCurrentGroupName("Create Start Panel");
             int group = Undo.GetCurrentGroup();
 
-            // 기존 패널은 다시 만든다
+            // 기존 패널은 다시 만든다 (직접 옮겨 둔 위치는 유지)
             var old = FindChild(game.transform, StartPanelName);
+            bool keepPose = old != null;
+            Vector3 oldPos = keepPose ? old.position : Vector3.zero;
+            Quaternion oldRot = keepPose ? old.rotation : Quaternion.identity;
             if (old != null) Undo.DestroyObjectImmediate(old.gameObject);
+
+            var progress = Object.FindAnyObjectByType<HammerProgress>(FindObjectsInactive.Include);
+            bool withShop = progress != null;
 
             // 1. 패널 (Canvas World Space + TrackedDeviceGraphicRaycaster)
             var panel = (GameObject)PrefabUtility.InstantiatePrefab(panelPrefab, game.transform);
@@ -302,56 +308,38 @@ namespace StudyXR.PiggySmash.EditorTools
             panel.name = StartPanelName;
             var panelRect = (RectTransform)panel.transform;
             panelRect.pivot = new Vector2(0.5f, 0.5f);
-            panelRect.sizeDelta = new Vector2(512f, 440f);
-            panelRect.localScale = Vector3.one * 0.001f; // 512px → 0.51m
+            panelRect.sizeDelta = withShop ? new Vector2(560f, 720f) : new Vector2(512f, 440f);
+            panelRect.localScale = Vector3.one * 0.001f; // 1px = 1mm
 
             var canvas = panel.GetComponent<Canvas>();
             if (canvas != null) canvas.renderMode = RenderMode.WorldSpace;
             if (panel.GetComponent<TrackedDeviceGraphicRaycaster>() == null)
                 panel.AddComponent<TrackedDeviceGraphicRaycaster>();
 
-            // 2. 위치: XR Origin 앞 1m, 눈높이보다 살짝 아래에서 플레이어를 바라보게
-            Transform rig = FindRig(scene);
-            Vector3 rigPos = rig != null ? rig.position : (Camera.main != null ? Camera.main.transform.position - Vector3.up * 1.3f : Vector3.zero);
-            Vector3 forward = rig != null ? Flat(rig.forward) : Vector3.forward;
-            Vector3 pos = rigPos + forward * 1.0f + Vector3.up * 1.3f;
-            panel.transform.SetPositionAndRotation(pos, Quaternion.LookRotation(forward)); // 캔버스 +Z 가 플레이어 반대쪽일 때 앞면이 보인다
+            // 2. 위치: 기존 패널 자리, 없으면 XR Origin 앞 1m 에서 플레이어를 바라보게
+            Vector3 pos;
+            if (keepPose)
+            {
+                pos = oldPos;
+                panel.transform.SetPositionAndRotation(oldPos, oldRot);
+            }
+            else
+            {
+                Transform rig = FindRig(scene);
+                Vector3 rigPos = rig != null ? rig.position : (Camera.main != null ? Camera.main.transform.position - Vector3.up * 1.3f : Vector3.zero);
+                Vector3 forward = rig != null ? Flat(rig.forward) : Vector3.forward;
+                pos = rigPos + forward * 1.0f + Vector3.up * 1.3f;
+                panel.transform.SetPositionAndRotation(pos, Quaternion.LookRotation(forward)); // 캔버스 +Z 가 플레이어 반대쪽일 때 앞면이 보인다
+            }
 
-            // 3. 안내 문구
-            var msgGo = new GameObject("Message", typeof(RectTransform));
-            msgGo.layer = panel.layer;
-            msgGo.transform.SetParent(panel.transform, false);
-            msgGo.AddComponent<LayoutElement>().ignoreLayout = true; // 패널 루트의 HorizontalLayoutGroup 무시
-            var msgRect = (RectTransform)msgGo.transform;
-            msgRect.anchorMin = new Vector2(0f, 0.4f);
-            msgRect.anchorMax = new Vector2(1f, 1f);
-            msgRect.offsetMin = new Vector2(32f, 0f);
-            msgRect.offsetMax = new Vector2(-32f, -32f);
-            var message = msgGo.AddComponent<TextMeshProUGUI>();
-            message.alignment = TextAlignmentOptions.Center;
-            message.fontSize = 56f;
-            message.raycastTarget = false;
+            // 3. 안내 문구 (위쪽)
+            var message = CreatePanelText(panel, "Message",
+                withShop ? new Vector2(0f, 0.68f) : new Vector2(0f, 0.4f), new Vector2(1f, 1f), 56f);
             message.text = "ORE SMASH";
 
-            // 4. Start 버튼 (XRI Examples TextButton)
-            var buttonGo = (GameObject)PrefabUtility.InstantiatePrefab(buttonPrefab, panel.transform);
-            buttonGo.name = "Start Button";
-            var buttonLayout = buttonGo.GetComponent<LayoutElement>();
-            if (buttonLayout == null) buttonLayout = buttonGo.AddComponent<LayoutElement>();
-            buttonLayout.ignoreLayout = true; // 패널 루트의 HorizontalLayoutGroup 무시
-            var buttonRect = (RectTransform)buttonGo.transform;
-            buttonRect.anchorMin = buttonRect.anchorMax = new Vector2(0.5f, 0.25f);
-            buttonRect.pivot = new Vector2(0.5f, 0.5f);
-            buttonRect.anchoredPosition = Vector2.zero;
-            buttonRect.sizeDelta = new Vector2(280f, 80f);
-            var button = buttonGo.GetComponent<Button>();
-            var label = buttonGo.GetComponentInChildren<TMP_Text>(true);
-            if (label != null)
-            {
-                label.text = "START";
-                label.fontSize = 40f;
-                PrefabUtility.RecordPrefabInstancePropertyModifications(label);
-            }
+            // 4. Start 버튼 (XRI Examples TextButton, 아래쪽)
+            var (button, label) = CreatePanelButton(panel, buttonPrefab, "Start Button",
+                new Vector2(0.5f, withShop ? 0.1f : 0.25f), new Vector2(280f, 80f), "START", 40f);
 
             // 5. 연결
             var startPanel = panel.AddComponent<GameStartPanel>();
@@ -362,11 +350,31 @@ namespace StudyXR.PiggySmash.EditorTools
             so.FindProperty("messageText").objectReferenceValue = message;
             so.ApplyModifiedPropertiesWithoutUndo();
 
+            // 6. 망치 상점 (씬에 HammerProgress 가 있을 때만): 정보 + [<] [BUY/EQUIP] [>]
+            if (withShop)
+            {
+                var info = CreatePanelText(panel, "Shop Info", new Vector2(0f, 0.34f), new Vector2(1f, 0.66f), 40f);
+                info.text = "HAMMER SHOP";
+                var (prev, _) = CreatePanelButton(panel, buttonPrefab, "Prev Button", new Vector2(0.17f, 0.27f), new Vector2(80f, 72f), "<", 44f);
+                var (action, actionLabel) = CreatePanelButton(panel, buttonPrefab, "Buy Button", new Vector2(0.5f, 0.27f), new Vector2(260f, 72f), "BUY", 34f);
+                var (next, _) = CreatePanelButton(panel, buttonPrefab, "Next Button", new Vector2(0.83f, 0.27f), new Vector2(80f, 72f), ">", 44f);
+
+                var shop = panel.AddComponent<HammerShopPanel>();
+                so = new SerializedObject(shop);
+                so.FindProperty("progress").objectReferenceValue = progress;
+                so.FindProperty("infoText").objectReferenceValue = info;
+                so.FindProperty("prevButton").objectReferenceValue = prev;
+                so.FindProperty("nextButton").objectReferenceValue = next;
+                so.FindProperty("actionButton").objectReferenceValue = action;
+                so.FindProperty("actionLabel").objectReferenceValue = actionLabel;
+                so.ApplyModifiedPropertiesWithoutUndo();
+            }
+
             so = new SerializedObject(game);
             so.FindProperty("autoStart").boolValue = false;
             so.ApplyModifiedProperties();
 
-            if (button == null) Debug.LogWarning("[Piggy Smash] TextButton 에서 Button 컴포넌트를 찾지 못했습니다.", buttonGo);
+            if (button == null) Debug.LogWarning("[Piggy Smash] TextButton 에서 Button 컴포넌트를 찾지 못했습니다.", panel);
             if (Object.FindAnyObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
                 Debug.LogWarning("[Piggy Smash] 씬에 EventSystem(XRUIInputModule) 이 없습니다. 버튼이 눌리지 않습니다.");
 
@@ -374,7 +382,48 @@ namespace StudyXR.PiggySmash.EditorTools
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             Selection.activeGameObject = panel;
-            Debug.Log($"[Piggy Smash] 시작 패널 생성: {pos:F2}", panel);
+            Debug.Log($"[Piggy Smash] 시작 패널 생성: {pos:F2} (상점 {(withShop ? "포함" : "없음")})", panel);
+        }
+
+        private static TextMeshProUGUI CreatePanelText(GameObject panel, string name, Vector2 anchorMin, Vector2 anchorMax, float fontSize)
+        {
+            var go = new GameObject(name, typeof(RectTransform));
+            go.layer = panel.layer;
+            go.transform.SetParent(panel.transform, false);
+            go.AddComponent<LayoutElement>().ignoreLayout = true; // 패널 루트의 HorizontalLayoutGroup 무시
+            var rect = (RectTransform)go.transform;
+            rect.anchorMin = anchorMin;
+            rect.anchorMax = anchorMax;
+            rect.offsetMin = new Vector2(32f, 0f);
+            rect.offsetMax = new Vector2(-32f, -24f);
+            var text = go.AddComponent<TextMeshProUGUI>();
+            text.alignment = TextAlignmentOptions.Center;
+            text.fontSize = fontSize;
+            text.raycastTarget = false;
+            return text;
+        }
+
+        private static (Button, TMP_Text) CreatePanelButton(GameObject panel, GameObject buttonPrefab, string name,
+            Vector2 anchor, Vector2 size, string text, float fontSize)
+        {
+            var go = (GameObject)PrefabUtility.InstantiatePrefab(buttonPrefab, panel.transform);
+            go.name = name;
+            var layout = go.GetComponent<LayoutElement>();
+            if (layout == null) layout = go.AddComponent<LayoutElement>();
+            layout.ignoreLayout = true; // 패널 루트의 HorizontalLayoutGroup 무시
+            var rect = (RectTransform)go.transform;
+            rect.anchorMin = rect.anchorMax = anchor;
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = Vector2.zero;
+            rect.sizeDelta = size;
+            var label = go.GetComponentInChildren<TMP_Text>(true);
+            if (label != null)
+            {
+                label.text = text;
+                label.fontSize = fontSize;
+                PrefabUtility.RecordPrefabInstancePropertyModifications(label);
+            }
+            return (go.GetComponent<Button>(), label);
         }
 
         private static Transform FindRig(Scene scene)
