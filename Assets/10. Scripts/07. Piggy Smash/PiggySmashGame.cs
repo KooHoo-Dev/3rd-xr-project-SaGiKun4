@@ -14,6 +14,8 @@ namespace StudyXR.PiggySmash
         [Header("표시")]
         [SerializeField] private TMP_Text boardText;
         [SerializeField] private string title = "ORE SMASH";
+        [Tooltip("라운드 중에만 점수판을 보여준다 (대기·결과는 시작 패널이 표시)")]
+        [SerializeField] private bool showBoardOnlyWhileRunning = true;
 
         [Header("라운드")]
         [Tooltip("0 이하이면 시간 제한 없음")]
@@ -140,6 +142,10 @@ namespace StudyXR.PiggySmash
         private void RefreshBoard()
         {
             if (boardText == null) return;
+
+            bool visible = IsRunning || showBoardOnlyWhileRunning == false;
+            if (boardText.gameObject.activeSelf != visible) boardText.gameObject.SetActive(visible);
+            if (visible == false) return;
 
             string time = roundSeconds > 0f ? $"TIME  {Mathf.CeilToInt(remaining)}" : "FREE MODE";
             if (IsRunning)
