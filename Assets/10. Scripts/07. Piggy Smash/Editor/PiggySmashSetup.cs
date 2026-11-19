@@ -285,9 +285,7 @@ namespace StudyXR.PiggySmash.EditorTools
             var buttonPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(ButtonPath);
             if (panelPrefab == null || buttonPrefab == null)
             {
-                Fail("XRI Examples 패널/버튼 프리팹을 찾지 못했습니다.
-" + PanelPath + "
-" + ButtonPath);
+                Fail("XRI Examples 패널/버튼 프리팹을 찾지 못했습니다: " + PanelPath + " , " + ButtonPath);
                 return;
             }
 
