@@ -18,7 +18,8 @@ namespace StudyXR.PiggySmash
         [Header("라운드")]
         [Tooltip("0 이하이면 시간 제한 없음")]
         [SerializeField] private float roundSeconds = 60f;
-        [SerializeField] private bool autoStart = true;
+        [Tooltip("끄면 시작 패널(GameStartPanel)의 Start 버튼으로 시작한다")]
+        [SerializeField] private bool autoStart = false;
 
         [Header("점수 팝업")]
         [SerializeField] private bool showPopup = true;
@@ -37,6 +38,7 @@ namespace StudyXR.PiggySmash
 
         public bool IsRunning { get; private set; }
         public int Score => score;
+        public int Best => best;
 
         /// <summary>라운드가 시작될 때 (스포너가 필드를 초기화하는 데 사용)</summary>
         public event Action RoundStarted;
@@ -152,7 +154,7 @@ namespace StudyXR.PiggySmash
                 boardText.text =
                     $"<size=60%>{title}</size>\n" +
                     $"{(breakCount > 0 ? $"FINAL  {score}" : "READY")}\n" +
-                    $"<size=60%>BEST  {best}   |   A / R : START</size>";
+                    $"<size=60%>BEST  {best}   |   PRESS START</size>";
             }
         }
     }

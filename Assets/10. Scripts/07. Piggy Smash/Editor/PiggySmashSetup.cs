@@ -5,6 +5,8 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using UnityEngine.XR.Interaction.Toolkit.UI;
 using UnityEngine.XR.Content.Interaction;
 
 namespace StudyXR.PiggySmash.EditorTools
@@ -20,6 +22,10 @@ namespace StudyXR.PiggySmash.EditorTools
         private const string MalletPath = "Assets/XRI_Examples/GrabInteractables/Prefabs/Mallet.prefab";
         private const string GameScenePath = "Assets/Scenes/Piggy Smash.unity";
         private const string DestroyerTag = "Destroyer";
+        // XRI Examples 의 월드 스페이스 패널 / 버튼 (원본 랩 씬의 2D UI 와 같은 구성)
+        private const string PanelPath = "Assets/XRI_Examples/UI_2D/Prefabs/MainMenu/SpatialPanelBase.prefab";
+        private const string ButtonPath = "Assets/XRI_Examples/UI_2D/Prefabs/Buttons/TextButton.prefab";
+        private const string StartPanelName = "Start Panel";
 
         // 랩 씬에서 남길 루트 오브젝트
         private static readonly string[] KeepRoots =
@@ -256,6 +262,132 @@ namespace StudyXR.PiggySmash.EditorTools
             Undo.CollapseUndoOperations(group);
             Selection.activeGameObject = root;
             Debug.Log("[Piggy Smash] 배치 완료. 씬에 XR Origin 이 있는지 확인하세요.", root);
+        }
+
+        // ───────────────────────── 시작 패널 ─────────────────────────
+
+        /// <summary>
+        /// 열린 씬에 Start 버튼 패널을 만든다. 플레이어(XR Origin) 앞에 놓이고, 라운드 중에는 숨는다.
+        /// 게임의 autoStart 는 끈다 → Start 버튼을 눌러야 라운드가 시작된다.
+        /// </summary>
+        [MenuItem("Tools/Piggy Smash/Create Start Panel (Open Scene)")]
+        public static void CreateStartPanel()
+        {
+            var scene = SceneManager.GetActiveScene();
+            var game = Object.FindAnyObjectByType<PiggySmashGame>(FindObjectsInactive.Include);
+            if (game == null)
+            {
+                Fail("열린 씬에 PiggySmashGame 이 없습니다. 먼저 게임을 배치하세요.");
+                return;
+            }
+
+            var panelPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PanelPath);
+            var buttonPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(ButtonPath);
+            if (panelPrefab == null || buttonPrefab == null)
+            {
+                Fail("XRI Examples 패널/버튼 프리팹을 찾지 못했습니다.
+" + PanelPath + "
+" + ButtonPath);
+                return;
+            }
+
+            Undo.SetCurrentGroupName("Create Start Panel");
+            int group = Undo.GetCurrentGroup();
+
+            // 기존 패널은 다시 만든다
+            var old = FindChild(game.transform, StartPanelName);
+            if (old != null) Undo.DestroyObjectImmediate(old.gameObject);
+
+            // 1. 패널 (Canvas World Space + TrackedDeviceGraphicRaycaster)
+            var panel = (GameObject)PrefabUtility.InstantiatePrefab(panelPrefab, game.transform);
+            Undo.RegisterCreatedObjectUndo(panel, "Create Start Panel");
+            panel.name = StartPanelName;
+            var panelRect = (RectTransform)panel.transform;
+            panelRect.pivot = new Vector2(0.5f, 0.5f);
+            panelRect.sizeDelta = new Vector2(512f, 440f);
+            panelRect.localScale = Vector3.one * 0.001f; // 512px → 0.51m
+
+            var canvas = panel.GetComponent<Canvas>();
+            if (canvas != null) canvas.renderMode = RenderMode.WorldSpace;
+            if (panel.GetComponent<TrackedDeviceGraphicRaycaster>() == null)
+                panel.AddComponent<TrackedDeviceGraphicRaycaster>();
+
+            // 2. 위치: XR Origin 앞 1m, 눈높이보다 살짝 아래에서 플레이어를 바라보게
+            Transform rig = FindRig(scene);
+            Vector3 rigPos = rig != null ? rig.position : (Camera.main != null ? Camera.main.transform.position - Vector3.up * 1.3f : Vector3.zero);
+            Vector3 forward = rig != null ? Flat(rig.forward) : Vector3.forward;
+            Vector3 pos = rigPos + forward * 1.0f + Vector3.up * 1.3f;
+            panel.transform.SetPositionAndRotation(pos, Quaternion.LookRotation(forward)); // 캔버스 +Z 가 플레이어 반대쪽일 때 앞면이 보인다
+
+            // 3. 안내 문구
+            var msgGo = new GameObject("Message", typeof(RectTransform));
+            msgGo.layer = panel.layer;
+            msgGo.transform.SetParent(panel.transform, false);
+            msgGo.AddComponent<LayoutElement>().ignoreLayout = true; // 패널 루트의 HorizontalLayoutGroup 무시
+            var msgRect = (RectTransform)msgGo.transform;
+            msgRect.anchorMin = new Vector2(0f, 0.4f);
+            msgRect.anchorMax = new Vector2(1f, 1f);
+            msgRect.offsetMin = new Vector2(32f, 0f);
+            msgRect.offsetMax = new Vector2(-32f, -32f);
+            var message = msgGo.AddComponent<TextMeshProUGUI>();
+            message.alignment = TextAlignmentOptions.Center;
+            message.fontSize = 56f;
+            message.raycastTarget = false;
+            message.text = "ORE SMASH";
+
+            // 4. Start 버튼 (XRI Examples TextButton)
+            var buttonGo = (GameObject)PrefabUtility.InstantiatePrefab(buttonPrefab, panel.transform);
+            buttonGo.name = "Start Button";
+            var buttonLayout = buttonGo.GetComponent<LayoutElement>();
+            if (buttonLayout == null) buttonLayout = buttonGo.AddComponent<LayoutElement>();
+            buttonLayout.ignoreLayout = true; // 패널 루트의 HorizontalLayoutGroup 무시
+            var buttonRect = (RectTransform)buttonGo.transform;
+            buttonRect.anchorMin = buttonRect.anchorMax = new Vector2(0.5f, 0.25f);
+            buttonRect.pivot = new Vector2(0.5f, 0.5f);
+            buttonRect.anchoredPosition = Vector2.zero;
+            buttonRect.sizeDelta = new Vector2(280f, 80f);
+            var button = buttonGo.GetComponent<Button>();
+            var label = buttonGo.GetComponentInChildren<TMP_Text>(true);
+            if (label != null)
+            {
+                label.text = "START";
+                label.fontSize = 40f;
+                PrefabUtility.RecordPrefabInstancePropertyModifications(label);
+            }
+
+            // 5. 연결
+            var startPanel = panel.AddComponent<GameStartPanel>();
+            var so = new SerializedObject(startPanel);
+            so.FindProperty("game").objectReferenceValue = game;
+            so.FindProperty("startButton").objectReferenceValue = button;
+            so.FindProperty("buttonLabel").objectReferenceValue = label;
+            so.FindProperty("messageText").objectReferenceValue = message;
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            so = new SerializedObject(game);
+            so.FindProperty("autoStart").boolValue = false;
+            so.ApplyModifiedProperties();
+
+            if (button == null) Debug.LogWarning("[Piggy Smash] TextButton 에서 Button 컴포넌트를 찾지 못했습니다.", buttonGo);
+            if (Object.FindAnyObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
+                Debug.LogWarning("[Piggy Smash] 씬에 EventSystem(XRUIInputModule) 이 없습니다. 버튼이 눌리지 않습니다.");
+
+            Undo.CollapseUndoOperations(group);
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+            Selection.activeGameObject = panel;
+            Debug.Log($"[Piggy Smash] 시작 패널 생성: {pos:F2}", panel);
+        }
+
+        private static Transform FindRig(Scene scene)
+        {
+            foreach (var go in scene.GetRootGameObjects())
+            {
+                var rig = go.GetComponentsInChildren<Component>(true)
+                    .FirstOrDefault(c => c != null && c.GetType().Name == "XROrigin");
+                if (rig != null) return rig.transform;
+            }
+            return null;
         }
 
         // ───────────────────────── 공통 ─────────────────────────
