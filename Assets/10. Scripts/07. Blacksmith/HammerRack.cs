@@ -64,12 +64,14 @@ namespace StudyXR.Blacksmith
         [Header("소리")]
         [Tooltip("선택된 망치가 손을 떠난 채로 부딪힐 때 랜덤 재생 (Drop1~4)")]
         [SerializeField] private AudioClip[] dropClips;
-        [Range(0f, 1f)] [SerializeField] private float dropVolume = 1f;
+        [Tooltip("1 보다 크면 증폭")]
+        [Range(0f, 3f)] [SerializeField] private float dropVolume = 2f;
         [Tooltip("코인을 얻을 때 (납품 보상)")]
         [SerializeField] private AudioClip coinGetClip;
         [Tooltip("코인을 쓸 때 (망치 해금, 장부 계약)")]
         [SerializeField] private AudioClip coinUseClip;
-        [Range(0f, 1f)] [SerializeField] private float coinVolume = 1f;
+        [Tooltip("1 보다 크면 증폭")]
+        [Range(0f, 3f)] [SerializeField] private float coinVolume = 2f;
 
         private AudioSource coinAudio;
 

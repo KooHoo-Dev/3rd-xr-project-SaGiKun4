@@ -81,7 +81,10 @@ namespace StudyXR.Blacksmith
         [SerializeField] private AudioClip[] stoneClips;
         [Tooltip("채굴된 광물이 화로에 들어갔을 때 랜덤 재생 (Fire1~3)")]
         [SerializeField] private AudioClip[] sinkClips;
-        [Range(0f, 1f)] [SerializeField] private float sfxVolume = 1f;
+        [Tooltip("타격(Pick)·돌 깎임(Stone) 볼륨. 1 보다 크면 증폭")]
+        [Range(0f, 3f)] [SerializeField] private float mineVolume = 2f;
+        [Tooltip("화로 투입(Fire) 볼륨")]
+        [Range(0f, 3f)] [SerializeField] private float sinkVolume = 1f;
 
         [Header("연출")]
         [SerializeField] private float popInSeconds = 0.25f;
@@ -194,7 +197,7 @@ namespace StudyXR.Blacksmith
             vein.Setup(type.name, type.points, breakEffect, breakClip);
             vein.SetupSink(sinkTarget, flySeconds, arcHeight);
             vein.SetupHits(type.hitsToMine, crackMaterial);
-            vein.SetupSounds(hitClips, stoneClips, sinkClips, sfxVolume);
+            vein.SetupSounds(hitClips, stoneClips, sinkClips, mineVolume, sinkVolume);
             vein.Mined += (v, breaker) => OnMined(v, type);
             alive.Add(vein);
 

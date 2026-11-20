@@ -12,7 +12,8 @@ namespace StudyXR.Blacksmith
     {
         [Tooltip("부딪힐 때 랜덤으로 하나 재생 (Drop1~4)")]
         [SerializeField] private AudioClip[] clips;
-        [Range(0f, 1f)] [SerializeField] private float volume = 1f;
+        [Tooltip("1 보다 크면 증폭")]
+        [Range(0f, 3f)] [SerializeField] private float volume = 2f;
         [Tooltip("이 속도(m/s) 이상으로 부딪혀야 소리가 난다 (바닥에서 굴러가는 잔충돌 무시)")]
         [SerializeField] private float minImpactSpeed = 0.6f;
         [Tooltip("이 속도(m/s)에서 최대 볼륨")]
@@ -52,10 +53,9 @@ namespace StudyXR.Blacksmith
             lastTime = Time.time;
 
             var clip = clips[Random.Range(0, clips.Length)];
-            if (clip == null) return;
             float k = Mathf.InverseLerp(minImpactSpeed, Mathf.Max(minImpactSpeed + 0.01f, fullVolumeSpeed), speed);
             Vector3 point = collision.contactCount > 0 ? collision.GetContact(0).point : transform.position;
-            AudioSource.PlayClipAtPoint(clip, point, volume * Mathf.Lerp(0.4f, 1f, k));
+            Sfx.PlayAt(clip, point, volume * Mathf.Lerp(0.4f, 1f, k));
         }
     }
 }
