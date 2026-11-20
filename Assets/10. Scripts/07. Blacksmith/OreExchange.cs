@@ -50,12 +50,12 @@ namespace StudyXR.Blacksmith
             new OrePrice { ore = "Gold", unitPrice = 45, minAmount = 1, maxAmount = 2 },
         };
         [Header("납품 버튼 색")]
-        [Tooltip("납품 가능: 버튼 배경")]
-        [SerializeField] private Color availableColor = Color.white;
+        [Tooltip("납품 가능: 버튼 배경 (반투명 흰색)")]
+        [SerializeField] private Color availableColor = new Color(0.784f, 0.784f, 0.784f, 0.502f);
         [Tooltip("납품 가능: 버튼 글씨")]
-        [SerializeField] private Color availableTextColor = new Color(0.15f, 0.15f, 0.15f, 1f);
-        [Tooltip("납품 불가: 버튼 배경")]
-        [SerializeField] private Color unavailableColor = new Color(0.78f, 0.2f, 0.2f, 1f);
+        [SerializeField] private Color availableTextColor = Color.white;
+        [Tooltip("납품 불가: 버튼 배경 (반투명 붉은색)")]
+        [SerializeField] private Color unavailableColor = new Color(0.85f, 0.25f, 0.25f, 0.55f);
         [Tooltip("납품 불가: 버튼 글씨")]
         [SerializeField] private Color unavailableTextColor = Color.white;
 
@@ -165,14 +165,14 @@ namespace StudyXR.Blacksmith
             }
         }
 
-        // 버튼 배경: 가능 = availableColor(흰색), 불가(비활성) = unavailableColor(붉은색)
+        // 버튼 배경: 가능 = availableColor(반투명 흰색), 불가(비활성) = unavailableColor(반투명 붉은색)
         private void ApplyButtonColors(Button button)
         {
             var c = button.colors;
             c.normalColor = availableColor;
             c.selectedColor = availableColor;
-            c.highlightedColor = availableColor * 0.85f;
-            c.pressedColor = availableColor * 0.7f;
+            c.highlightedColor = new Color(availableColor.r, availableColor.g, availableColor.b, Mathf.Min(1f, availableColor.a + 0.2f));
+            c.pressedColor = new Color(availableColor.r * 0.8f, availableColor.g * 0.8f, availableColor.b * 0.8f, Mathf.Min(1f, availableColor.a + 0.2f));
             c.disabledColor = unavailableColor;
             c.colorMultiplier = 1f;
             button.colors = c;
