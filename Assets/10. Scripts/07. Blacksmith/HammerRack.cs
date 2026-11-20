@@ -12,7 +12,7 @@ namespace StudyXR.Blacksmith
     /// - 잠긴 망치: 검정 실루엣, 잡을 수 없음. 선반 위 상점 UI 에서 코인으로 해금한다.
     /// - 해금된 망치: 원래 색, 잡을 수 있음. 잡을 수 있는 대상이 된 망치 하나만 껍데기 외곽선으로 강조한다.
     /// - 선택은 플레이어가 직접 한다:
-    ///     망치를 스탠드(anchor)에 놓으면 선택 — 스탠드에는 망치 하나만 올릴 수 있다.
+    ///     망치가 스탠드에 닿으면(놓는 순간 닿아 있거나, 떨어지다 닿거나) 선택되고 바로 거치된다 — 스탠드에는 망치 하나만.
     ///     스탠드의 망치를 선반에 가져다 놓으면 선택 해제.
     /// - 선택된 망치로만 광석을 캘 수 있다 (HammerStats.CanHit).
     /// - 망치 위치는 모두 Neck 기준이다 (선반 자리 = 처음 Neck 위치, 스탠드 자리 = anchor).
@@ -36,6 +36,7 @@ namespace StudyXR.Blacksmith
             [NonSerialized] public ReturnHome home;
             [NonSerialized] public HammerVisual visual;
             [NonSerialized] public HammerStats stats;
+            [NonSerialized] public HammerContact contact;
         }
 
         [SerializeField] private BlacksmithGame game;
@@ -47,7 +48,9 @@ namespace StudyXR.Blacksmith
         [Min(0f)] [SerializeField] private float coinsPerPoint = 1f;
 
         [Header("놓기 판정")]
-        [Tooltip("망치를 놓았을 때 Neck 이 anchor 에서 이 거리(m) 안이면 스탠드에 올린다")]
+        [Tooltip("망치가 이 콜라이더(트리거)에 닿으면 스탠드에 올린다 (비우면 anchor 부모의 트리거 콜라이더)")]
+        [SerializeField] private Collider standArea;
+        [Tooltip("닿지 않았어도 놓을 때 Neck 이 anchor 에서 이 거리(m) 안이면 스탠드에 올린다")]
         [SerializeField] private float standRadius = 0.3f;
         [Tooltip("선반 판정 범위 (비우면 이 오브젝트의 Collider)")]
         [SerializeField] private Collider rackArea;
@@ -83,11 +86,18 @@ namespace StudyXR.Blacksmith
         {
             if (game == null) game = FindAnyObjectByType<BlacksmithGame>();
             if (rackArea == null) rackArea = GetComponent<Collider>();
+            if (standArea == null && anchor != null)
+                foreach (var c in anchor.GetComponentsInParent<Collider>(true))
+                    if (c.isTrigger) { standArea = c; break; }
             Coins = PlayerPrefs.GetInt(CoinsKey, 0);
 
-            foreach (var e in hammers)
+            for (int i = 0; i < hammers.Count; ++i)
             {
+                var e = hammers[i];
                 if (e.hammer == null) continue;
+                e.contact = e.hammer.GetComponent<HammerContact>();
+                if (e.contact == null) e.contact = e.hammer.AddComponent<HammerContact>();
+                e.contact.Init(this, i, standArea);
                 e.neck = FindChild(e.hammer.transform, neckName);
                 var pivot = e.neck != null ? e.neck : e.hammer.transform;
                 e.slotPosition = pivot.position;
@@ -203,10 +213,11 @@ namespace StudyXR.Blacksmith
             if (e == null || e.hammer == null) return;
             Vector3 neck = (e.neck != null ? e.neck : e.hammer.transform).position;
 
-            if (anchor != null && (neck - anchor.position).sqrMagnitude <= standRadius * standRadius)
+            bool onStand = OverlapsStand(e) ||
+                           (anchor != null && (neck - anchor.position).sqrMagnitude <= standRadius * standRadius);
+            if (onStand)
             {
-                if (Selected < 0 || Selected == index) Select(index);
-                else if (e.home != null) e.home.GoHome(); // 스탠드에는 망치 하나만 — 원래 자리로 돌려보낸다
+                PlaceOnStandOrReturn(index);
                 return;
             }
 
@@ -216,6 +227,42 @@ namespace StudyXR.Blacksmith
                 else PutOnSlot(index);
             }
             // 그 밖의 곳: 그대로 두고, ReturnHome 이 일정 시간 뒤 제자리(선반 또는 스탠드)로 돌린다
+        }
+
+        /// <summary>
+        /// 망치가 스탠드 영역에 닿았을 때 (HammerContact). 손에 든 동안은 놓을 때 처리하고,
+        /// 손에서 놓인 채로 닿으면(떨어지다 닿음) 바로 스탠드에 올린다.
+        /// </summary>
+        public void OnHammerTouchedStand(int index)
+        {
+            var e = Get(index);
+            if (e == null || e.grab == null || e.grab.isSelected || IsUnlocked(index) == false) return;
+            if (Selected == index && e.body != null && e.body.isKinematic) return; // 이미 거치됨
+            PlaceOnStandOrReturn(index);
+        }
+
+        // 놓는 순간 망치 콜라이더가 스탠드 영역과 실제로 겹치는지 (트리거 이벤트는 한 물리 프레임 늦을 수 있어 직접 계산)
+        private bool OverlapsStand(Entry e)
+        {
+            if (standArea == null || e.hammer == null) return false;
+            var standT = standArea.transform;
+            foreach (var c in e.hammer.GetComponentsInChildren<Collider>())
+            {
+                if (c.enabled == false || c.GetComponent<MalletHitter>() != null) continue;
+                if (c.bounds.Intersects(standArea.bounds) == false) continue;
+                if (Physics.ComputePenetration(c, c.transform.position, c.transform.rotation,
+                        standArea, standT.position, standT.rotation, out _, out _))
+                    return true;
+            }
+            return false;
+        }
+
+        // 스탠드가 비어 있으면(또는 자기 자리면) 선택하고 바로 거치, 다른 망치가 있으면 원래 자리로 돌려보낸다
+        private void PlaceOnStandOrReturn(int index)
+        {
+            var e = Get(index);
+            if (Selected < 0 || Selected == index) Select(index);
+            else if (e != null && e.home != null) e.home.GoHome();
         }
 
         private bool IsInRack(Vector3 point)

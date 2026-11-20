@@ -174,7 +174,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1528502735215204765, guid: f761b7edfb6ef6942a47ab78411fecb5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1941938649}
   m_SourcePrefab: {fileID: 100100000, guid: f761b7edfb6ef6942a47ab78411fecb5, type: 3}
 --- !u!4 &19603478 stripped
 Transform:
@@ -336,7 +339,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StudyXR.PiggySmash.ReturnHome
   pivot: {fileID: 0}
-  fallY: 0.3
+  fallY: -1
   idleReturnSeconds: 8
   homeRadius: 0.3
   holdAtHome: 1
@@ -365,7 +368,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_InteractionManager: {fileID: 0}
-  m_Colliders: []
+  m_Colliders:
+  - {fileID: 1941938649}
   m_InteractionLayers:
     m_Bits: 1
   m_DistanceCalculationMode: 1
@@ -1945,6 +1949,11 @@ MonoBehaviour:
   restartLabel: RESTART
   noHammerHint: "<size=45%><color=#FF9A7A>\uB9DD\uCE58\uB97C \uC2A4\uD0E0\uB4DC\uC5D0
     \uC62C\uB824\uB450\uC138\uC694</color></size>"
+--- !u!65 &582141161 stripped
+BoxCollider:
+  m_CorrespondingSourceObject: {fileID: 7643734653240844860, guid: 6fad581e3a9e19449b03fccf2afbc735, type: 3}
+  m_PrefabInstance: {fileID: 260706812}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &585228223
 GameObject:
   m_ObjectHideFlags: 0
@@ -2291,7 +2300,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StudyXR.PiggySmash.ReturnHome
   pivot: {fileID: 0}
-  fallY: 0.3
+  fallY: -1
   idleReturnSeconds: 8
   homeRadius: 0.3
   holdAtHome: 1
@@ -2320,7 +2329,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_InteractionManager: {fileID: 0}
-  m_Colliders: []
+  m_Colliders:
+  - {fileID: 1687901081}
   m_InteractionLayers:
     m_Bits: 1
   m_DistanceCalculationMode: 1
@@ -2731,7 +2741,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &912872957
 Transform:
   m_ObjectHideFlags: 0
@@ -3154,7 +3164,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StudyXR.PiggySmash.ReturnHome
   pivot: {fileID: 0}
-  fallY: 0.3
+  fallY: -1
   idleReturnSeconds: 8
   homeRadius: 0.3
   holdAtHome: 1
@@ -3183,7 +3193,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_InteractionManager: {fileID: 0}
-  m_Colliders: []
+  m_Colliders:
+  - {fileID: 1363767522}
   m_InteractionLayers:
     m_Bits: 1
   m_DistanceCalculationMode: 1
@@ -4580,7 +4591,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1052712162
 Transform:
   m_ObjectHideFlags: 0
@@ -5382,7 +5393,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::StudyXR.PiggySmash.PiggySmashGame
   boardText: {fileID: 1012791680}
   title: "\uB300\uC7A5\uC7A5\uC774"
-  showBoardOnlyWhileRunning: 1
+  showBoardOnlyWhileRunning: 0
   roundSeconds: 60
   autoStart: 0
   showPopup: 1
@@ -5503,6 +5514,11 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
     m_Variable: {fileID: 0}
+--- !u!65 &1363767522 stripped
+BoxCollider:
+  m_CorrespondingSourceObject: {fileID: 7273944894741351456, guid: 55c7adbbda28d8a4a8f49f208c6ce21d, type: 3}
+  m_PrefabInstance: {fileID: 966148223}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1368013205
 GameObject:
   m_ObjectHideFlags: 0
@@ -5631,7 +5647,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1441159400
 Transform:
   m_ObjectHideFlags: 0
@@ -6567,6 +6583,11 @@ Transform:
   - {fileID: 1505409956}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &1687901081 stripped
+BoxCollider:
+  m_CorrespondingSourceObject: {fileID: 7714935478338969176, guid: 2221aa3f772cb384997c0dc5c637d610, type: 3}
+  m_PrefabInstance: {fileID: 628890630}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1728052122
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6677,6 +6698,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1901633351629748124, guid: e01373e490106ac46b76fba06110850e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1908433369}
+    - targetCorrespondingSourceObject: {fileID: 1901633351629748124, guid: e01373e490106ac46b76fba06110850e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2035287274}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e01373e490106ac46b76fba06110850e, type: 3}
 --- !u!4 &1728052123 stripped
@@ -7221,6 +7245,32 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1728052123}
   m_LocalEulerAnglesHint: {x: -15, y: 180, z: 0}
+--- !u!1 &1941938647 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1528502735215204765, guid: f761b7edfb6ef6942a47ab78411fecb5, type: 3}
+  m_PrefabInstance: {fileID: 19603477}
+  m_PrefabAsset: {fileID: 0}
+--- !u!65 &1941938649
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1941938647}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.2728904, y: 0.68086267, z: 0.42394692}
+  m_Center: {x: 0, y: 0.34043133, z: 0.00000013442775}
 --- !u!1 &2020305703
 GameObject:
   m_ObjectHideFlags: 0
@@ -7277,6 +7327,59 @@ CapsuleCollider:
   m_Height: 0.4428957
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: -0.02}
+--- !u!1 &2035287272
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2035287274}
+  - component: {fileID: 2035287273}
+  m_Layer: 0
+  m_Name: Stand Zone
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!65 &2035287273
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2035287272}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.45145464, y: 0.55316484, z: 0.47828984}
+  m_Center: {x: -0.0000003427267, y: 0.21658242, z: 0.084107146}
+--- !u!4 &2035287274
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2035287272}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1728052123}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2035711061
 GameObject:
   m_ObjectHideFlags: 0
@@ -7375,7 +7478,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StudyXR.PiggySmash.ReturnHome
   pivot: {fileID: 0}
-  fallY: 0.3
+  fallY: -1
   idleReturnSeconds: 8
   homeRadius: 0.3
   holdAtHome: 1
@@ -7404,7 +7507,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_InteractionManager: {fileID: 0}
-  m_Colliders: []
+  m_Colliders:
+  - {fileID: 582141161}
   m_InteractionLayers:
     m_Bits: 1
   m_DistanceCalculationMode: 1
@@ -7946,7 +8050,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &2127674337
 Transform:
   m_ObjectHideFlags: 0
@@ -87383,6 +87487,7 @@ MonoBehaviour:
     cost: 900
     damage: 4
   coinsPerPoint: 1
+  standArea: {fileID: 2035287273}
   standRadius: 0.3
   rackArea: {fileID: 0}
   rackMargin: 0.2

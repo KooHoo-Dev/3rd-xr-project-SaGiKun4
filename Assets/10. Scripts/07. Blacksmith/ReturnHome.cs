@@ -15,7 +15,7 @@ namespace StudyXR.Blacksmith
         [Tooltip("위치 기준점 (비우면 이 오브젝트). 망치는 Neck")]
         [SerializeField] private Transform pivot;
         [Tooltip("이 높이 아래로 떨어지면 즉시 복귀 (월드 Y)")]
-        [SerializeField] private float fallY = 0.3f;
+        [SerializeField] private float fallY = -1f;
         [Tooltip("손에서 놓은 뒤 이 시간이 지나면 복귀. 0 이하면 사용 안 함")]
         [SerializeField] private float idleReturnSeconds = 8f;
         [Tooltip("기준점이 제자리에서 이 거리 안이면 '제자리'로 본다")]
