@@ -9,7 +9,7 @@ namespace StudyXR.Blacksmith
 {
     /// <summary>
     /// 망치 선반 (상점). 코인 · 해금 · 선택을 관리한다 (PlayerPrefs 에 저장).
-    /// - 잠긴 망치: 검정 실루엣, 잡을 수 없음. 선반 위 상점 UI 에서 코인으로 해금한다.
+    /// - 잠긴 망치: 검정 실루엣, 잡을 수 없음. 거래소 UI 에서 코인으로 해금한다 (코인은 광물 납품으로 번다).
     /// - 해금된 망치: 원래 색, 잡을 수 있음. 잡을 수 있는 대상이 된 망치 하나만 껍데기 외곽선으로 강조한다.
     /// - 선택은 플레이어가 직접 한다:
     ///     망치가 스탠드에 닿으면(놓는 순간 닿아 있거나, 떨어지다 닿거나) 선택되고 바로 거치된다 — 스탠드에는 망치 하나만.
@@ -44,8 +44,6 @@ namespace StudyXR.Blacksmith
         [SerializeField] private Transform anchor;
         [SerializeField] private string neckName = "Neck";
         [SerializeField] private List<Entry> hammers = new List<Entry>();
-        [Tooltip("라운드 점수 1점당 코인")]
-        [Min(0f)] [SerializeField] private float coinsPerPoint = 1f;
 
         [Header("놓기 판정")]
         [Tooltip("망치가 이 콜라이더(트리거)에 닿으면 스탠드에 올린다 (비우면 anchor 부모의 트리거 콜라이더)")]
@@ -77,7 +75,6 @@ namespace StudyXR.Blacksmith
         /// <summary>스탠드에 올려진 망치 번호. 없으면 -1</summary>
         public int Selected { get; private set; } = -1;
         public bool HasSelection => Selected >= 0;
-        public int LastEarned { get; private set; }
 
         /// <summary>코인 · 해금 · 선택이 바뀔 때</summary>
         public event Action Changed;
@@ -121,8 +118,6 @@ namespace StudyXR.Blacksmith
             Selected = PlayerPrefs.GetInt(SelectedKey, 0);
             if (Selected >= hammers.Count || (Selected >= 0 && IsUnlocked(Selected) == false)) Selected = -1;
 
-            if (game != null) game.RoundEnded += OnRoundEnded;
-
             // 스탠드(XRI StickStand)의 소켓은 손잡이 Attach 기준으로 다시 끼워 넣으므로 끈다. 위치는 Neck 기준으로만 정한다.
             if (anchor != null)
                 foreach (var socket in anchor.GetComponentsInParent<XRSocketInteractor>(true))
@@ -131,7 +126,6 @@ namespace StudyXR.Blacksmith
 
         private void OnDestroy()
         {
-            if (game != null) game.RoundEnded -= OnRoundEnded;
             foreach (var h in releaseHandlers)
                 if (h.grab != null) h.grab.selectExited.RemoveListener(h.action);
         }
@@ -360,10 +354,11 @@ namespace StudyXR.Blacksmith
 
         // ───────────────────────── 코인 ─────────────────────────
 
-        private void OnRoundEnded()
+        /// <summary>코인을 더한다 (거래소 납품 보상).</summary>
+        public void AddCoins(int amount)
         {
-            LastEarned = Mathf.RoundToInt(game.Score * coinsPerPoint);
-            Coins += LastEarned;
+            if (amount <= 0) return;
+            Coins += amount;
             PlayerPrefs.SetInt(CoinsKey, Coins);
             PlayerPrefs.Save();
             Changed?.Invoke();

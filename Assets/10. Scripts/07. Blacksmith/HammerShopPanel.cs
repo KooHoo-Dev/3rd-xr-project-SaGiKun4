@@ -72,11 +72,10 @@ namespace StudyXR.Blacksmith
             bool unlocked = rack.IsUnlocked(index);
             if (infoText != null)
             {
+                // 구매할 망치의 이름과 간략한 스펙 (코인은 거래소 상단에 따로 표시)
                 infoText.text =
-                    "망치 상점\n" +
-                    $"<size=70%>코인  {rack.Coins}</size>\n" +
                     $"{entry.displayName}  <size=60%>({index + 1}/{rack.Count})</size>\n" +
-                    $"<size=70%>공격력  {entry.damage}{(unlocked ? "   |   보유 중" : "")}</size>";
+                    $"<size=70%>공격력  {entry.damage}   |   {(unlocked ? "보유 중" : $"가격  {entry.cost} 코인")}</size>";
             }
             if (actionLabel != null) actionLabel.text = unlocked ? "OWNED" : $"BUY  {entry.cost}";
             if (actionButton != null) actionButton.interactable = unlocked == false && rack.CanAfford(index);

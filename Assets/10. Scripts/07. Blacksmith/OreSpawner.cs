@@ -18,6 +18,7 @@ namespace StudyXR.Blacksmith
         {
             public string name = "Bronze";
             public GameObject prefab;
+            [Tooltip("(사용 안 함) 예전 점수 값. 광물은 이제 보관함에 개수로 쌓인다")]
             [Min(0)] public int points = 1;
             [Tooltip("캐기까지 때려야 하는 횟수")]
             [Min(1)] public int hitsToMine = 1;
@@ -193,7 +194,7 @@ namespace StudyXR.Blacksmith
         private void OnMined(OreVein vein, OreType type)
         {
             alive.Remove(vein);
-            if (game != null) game.AddPoints(type.points, vein.transform.position + Vector3.up * 0.25f, type.popupColor);
+            if (game != null) game.AddOre(type.name, vein.transform.position + Vector3.up * 0.25f, type.popupColor);
         }
 
         private OreType PickType()

@@ -5,16 +5,18 @@ using UnityEngine.UI;
 namespace StudyXR.Blacksmith
 {
     /// <summary>
-    /// 월드 스페이스 패널의 Start 버튼으로 라운드를 시작한다.
-    /// XRI Examples 의 SpatialPanelBase + TextButton 프리팹 구조를 그대로 사용한다.
+    /// 화로 앞 시작 패널. 버튼으로 라운드를 시작한다.
     /// (XR Ray Interactor → TrackedDeviceGraphicRaycaster → uGUI Button.onClick)
-    /// - 라운드 중에는 패널을 숨기고, 라운드가 끝나면 결과와 RESTART 버튼으로 다시 보여준다.
-    /// - 스탠드에 올린(선택된) 망치가 없으면 시작 버튼을 끄고 안내 문구를 덧붙인다.
+    /// - 라운드 중에는 패널을 숨기고, 라운드가 끝나면 다시 보여준다.
+    /// - 점수는 표시하지 않는다. 문구는 망치 선택 상태로만 바뀐다:
+    ///     스탠드에 망치가 있음 → readyMessage, 없음 → noHammerMessage (시작 버튼도 꺼짐)
+    /// - 버튼 글자는 씬에서 적어 둔 그대로 둔다.
     /// </summary>
     public class GameStartPanel : MonoBehaviour
     {
         [SerializeField] private BlacksmithGame game;
         [SerializeField] private Button startButton;
+        [Tooltip("(사용 안 함) 버튼 글자는 씬에서 직접 정한다")]
         [SerializeField] private TMP_Text buttonLabel;
         [SerializeField] private TMP_Text messageText;
         [Tooltip("선택된 망치가 있어야 시작할 수 있다 (비우면 씬에서 찾음)")]
@@ -25,12 +27,11 @@ namespace StudyXR.Blacksmith
         [SerializeField] private bool hideWhileRunning = true;
 
         [Header("문구")]
-        [SerializeField] private string readyMessage = "대장장이\n<size=60%>망치를 들고 광석을 단조하세요!</size>";
-        [SerializeField] private string startLabel = "START";
-        [SerializeField] private string restartLabel = "RESTART";
-        [SerializeField] private string noHammerHint = "<size=45%><color=#FF9A7A>망치를 스탠드에 올려두세요</color></size>";
+        [Tooltip("스탠드에 망치가 올라가 있을 때")]
+        [SerializeField] private string readyMessage = "화로를 열고 작업을 시작하세요!";
+        [Tooltip("스탠드에 망치가 없을 때")]
+        [SerializeField] private string noHammerMessage = "작업 시작 전 망치를 선택하세요!";
 
-        private string baseMessage = "";
         private bool? lastCanStart;
 
         // 패널이 비활성화돼도 이벤트를 받아야 하므로 OnEnable/OnDisable 대신 Awake/OnDestroy 에서 구독한다.
@@ -61,7 +62,7 @@ namespace StudyXR.Blacksmith
         private void Start()
         {
             if (game != null && game.IsRunning) OnRoundStarted();
-            else ShowReady();
+            else Show();
         }
 
         private bool CanStart => rack == null || rack.HasSelection;
@@ -71,8 +72,7 @@ namespace StudyXR.Blacksmith
             bool can = CanStart;
             if (lastCanStart == can) return;
             lastCanStart = can;
-            if (startButton != null) startButton.interactable = can;
-            RefreshMessage();
+            Refresh();
         }
 
         private void OnStartClicked()
@@ -81,35 +81,24 @@ namespace StudyXR.Blacksmith
             game.StartRound();
         }
 
-        private void SetMessage(string text)
-        {
-            baseMessage = text;
-            RefreshMessage();
-        }
-
-        private void RefreshMessage()
-        {
-            if (messageText == null) return;
-            messageText.text = CanStart ? baseMessage : baseMessage + "\n" + noHammerHint;
-        }
-
         private void OnRoundStarted()
         {
             if (hideWhileRunning) panelRoot.SetActive(false);
         }
 
-        private void OnRoundEnded()
+        private void OnRoundEnded() => Show();
+
+        private void Show()
         {
-            SetMessage($"FINAL  {game.Score}\n<size=60%>BEST  {game.Best}</size>");
-            if (buttonLabel != null) buttonLabel.text = restartLabel;
+            Refresh();
             panelRoot.SetActive(true);
         }
 
-        private void ShowReady()
+        private void Refresh()
         {
-            SetMessage(readyMessage);
-            if (buttonLabel != null) buttonLabel.text = startLabel;
-            panelRoot.SetActive(true);
+            bool can = CanStart;
+            if (startButton != null) startButton.interactable = can;
+            if (messageText != null) messageText.text = can ? readyMessage : noHammerMessage;
         }
     }
 }
