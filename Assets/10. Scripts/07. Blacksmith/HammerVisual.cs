@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace StudyXR.PiggySmash
+namespace StudyXR.Blacksmith
 {
     /// <summary>
     /// 망치 모델의 표시 상태.

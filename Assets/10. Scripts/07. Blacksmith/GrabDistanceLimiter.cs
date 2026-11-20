@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit.Attachment;
 
-namespace StudyXR.PiggySmash
+namespace StudyXR.Blacksmith
 {
     /// <summary>
     /// 잡은 물건을 조이스틱으로 밀고 당길 때(Near-Far Interactor 의 InteractionAttachController)

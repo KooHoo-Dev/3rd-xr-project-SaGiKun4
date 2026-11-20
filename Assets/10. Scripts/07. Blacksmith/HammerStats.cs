@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace StudyXR.PiggySmash
+namespace StudyXR.Blacksmith
 {
     /// <summary>
     /// 망치 한 자루의 공격력. 망치 루트(Rigidbody 가 있는 오브젝트)에 붙인다.
@@ -13,6 +13,10 @@ namespace StudyXR.PiggySmash
         [Min(1)] [SerializeField] private int damage = 1;
 
         public int Damage => damage;
+
+        /// <summary>광석을 캘 수 있는지. 망치 선반(HammerRack)이 스탠드에 올린(선택된) 망치만 켠다.</summary>
+        public bool CanHit { get; private set; } = true;
+        public void SetCanHit(bool value) => CanHit = value;
 
         public void SetDamage(int value) => damage = Mathf.Max(1, value);
     }

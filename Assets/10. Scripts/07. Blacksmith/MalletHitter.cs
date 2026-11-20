@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace StudyXR.PiggySmash
+namespace StudyXR.Blacksmith
 {
     /// <summary>
     /// 망치 헤드의 '타격 판정' 콜라이더. 스윙 거리로 가산 데미지를 준다.

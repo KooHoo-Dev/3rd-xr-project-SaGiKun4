@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
-namespace StudyXR.PiggySmash
+namespace StudyXR.Blacksmith
 {
     /// <summary>
     /// 망치를 바닥에 떨어뜨리거나 놓친 채로 일정 시간이 지나면 제자리로 되돌린다.

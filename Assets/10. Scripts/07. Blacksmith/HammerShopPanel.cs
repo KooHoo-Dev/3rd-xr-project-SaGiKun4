@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace StudyXR.PiggySmash
+namespace StudyXR.Blacksmith
 {
     /// <summary>
     /// 망치 선반 위의 상점 UI. &lt; / &gt; 로 망치를 넘기고, 가운데 버튼으로 코인을 써서 해금(BUY)한다.
@@ -73,6 +73,7 @@ namespace StudyXR.PiggySmash
             if (infoText != null)
             {
                 infoText.text =
+                    "망치 상점\n" +
                     $"<size=70%>코인  {rack.Coins}</size>\n" +
                     $"{entry.displayName}  <size=60%>({index + 1}/{rack.Count})</size>\n" +
                     $"<size=70%>공격력  {entry.damage}{(unlocked ? "   |   보유 중" : "")}</size>";

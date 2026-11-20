@@ -5,7 +5,7 @@ using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
-namespace StudyXR.PiggySmash
+namespace StudyXR.Blacksmith
 {
     /// <summary>
     /// 망치 선반 (상점). 코인 · 해금 · 선택을 관리한다 (PlayerPrefs 에 저장).
@@ -14,6 +14,7 @@ namespace StudyXR.PiggySmash
     /// - 선택은 플레이어가 직접 한다:
     ///     망치를 스탠드(anchor)에 놓으면 선택 — 스탠드에는 망치 하나만 올릴 수 있다.
     ///     스탠드의 망치를 선반에 가져다 놓으면 선택 해제.
+    /// - 선택된 망치로만 광석을 캘 수 있다 (HammerStats.CanHit).
     /// - 망치 위치는 모두 Neck 기준이다 (선반 자리 = 처음 Neck 위치, 스탠드 자리 = anchor).
     /// </summary>
     public class HammerRack : MonoBehaviour
@@ -34,9 +35,10 @@ namespace StudyXR.PiggySmash
             [NonSerialized] public Rigidbody body;
             [NonSerialized] public ReturnHome home;
             [NonSerialized] public HammerVisual visual;
+            [NonSerialized] public HammerStats stats;
         }
 
-        [SerializeField] private PiggySmashGame game;
+        [SerializeField] private BlacksmithGame game;
         [Tooltip("스탠드 위 망치 자리 (선택한 망치의 Neck 이 놓이는 곳)")]
         [SerializeField] private Transform anchor;
         [SerializeField] private string neckName = "Neck";
@@ -79,7 +81,7 @@ namespace StudyXR.PiggySmash
 
         private void Awake()
         {
-            if (game == null) game = FindAnyObjectByType<PiggySmashGame>();
+            if (game == null) game = FindAnyObjectByType<BlacksmithGame>();
             if (rackArea == null) rackArea = GetComponent<Collider>();
             Coins = PlayerPrefs.GetInt(CoinsKey, 0);
 
@@ -98,6 +100,7 @@ namespace StudyXR.PiggySmash
                 var stats = e.hammer.GetComponent<HammerStats>();
                 if (stats == null) stats = e.hammer.AddComponent<HammerStats>();
                 stats.SetDamage(e.damage);
+                e.stats = stats;
 
                 e.visual = e.hammer.GetComponent<HammerVisual>();
                 if (e.visual == null) e.visual = e.hammer.AddComponent<HammerVisual>();
@@ -140,6 +143,7 @@ namespace StudyXR.PiggySmash
                 else PutOnSlot(i);
                 ApplyLock(i);
             }
+            RefreshCanHit();
             Changed?.Invoke();
         }
 
@@ -237,8 +241,16 @@ namespace StudyXR.PiggySmash
             Save();
         }
 
+        // 선택된 망치만 광석을 캘 수 있다
+        private void RefreshCanHit()
+        {
+            for (int i = 0; i < hammers.Count; ++i)
+                if (hammers[i].stats != null) hammers[i].stats.SetCanHit(i == Selected);
+        }
+
         private void Save()
         {
+            RefreshCanHit();
             PlayerPrefs.SetInt(SelectedKey, Selected);
             PlayerPrefs.Save();
             Changed?.Invoke();
@@ -332,6 +344,7 @@ namespace StudyXR.PiggySmash
                 if (i == 0) PutOnStand(i); else PutOnSlot(i);
                 ApplyLock(i);
             }
+            RefreshCanHit();
             Changed?.Invoke();
         }
 

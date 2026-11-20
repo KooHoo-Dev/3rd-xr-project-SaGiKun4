@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-namespace StudyXR.PiggySmash
+namespace StudyXR.Blacksmith
 {
     /// <summary>
     /// 라운드가 시작되면 오븐 문(OvenDoor)을 로컬 +Y 축으로 openAngle 만큼 열고,
@@ -10,7 +10,7 @@ namespace StudyXR.PiggySmash
     public class OvenDoorOpener : MonoBehaviour
     {
         [Header("연결")]
-        [SerializeField] private PiggySmashGame game;
+        [SerializeField] private BlacksmithGame game;
         [Tooltip("열 문. 비우면 아래 이름으로 씬에서 찾는다")]
         [SerializeField] private Transform door;
         [SerializeField] private string doorName = "OvenDoor";

@@ -1,7 +1,7 @@
 using TMPro;
 using UnityEngine;
 
-namespace StudyXR.PiggySmash
+namespace StudyXR.Blacksmith
 {
     /// <summary>
     /// "+1" 같은 월드 텍스트를 띄워 위로 올라가며 사라지게 한다. 항상 카메라를 바라본다.

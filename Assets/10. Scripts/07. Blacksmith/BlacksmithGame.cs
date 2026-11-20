@@ -3,13 +3,13 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace StudyXR.PiggySmash
+namespace StudyXR.Blacksmith
 {
     /// <summary>
     /// 광맥 채굴 게임의 점수 / 라운드 / 점수판을 관리한다.
     /// roundSeconds 가 0 이하이면 시간 제한 없는 무한 모드.
     /// </summary>
-    public class PiggySmashGame : MonoBehaviour
+    public class BlacksmithGame : MonoBehaviour
     {
         [Header("표시")]
         [SerializeField] private TMP_Text boardText;
@@ -30,7 +30,8 @@ namespace StudyXR.PiggySmash
         [Header("입력 (A 버튼 / 키보드 R = 시작·재시작)")]
         [SerializeField] private bool useRestartInput = true;
 
-        private const string BestKey = "PiggySmash.Best";
+        private const string BestKey = "Blacksmith.Best";
+        private const string OldBestKey = "PiggySmash.Best"; // 이전 이름으로 저장된 최고 점수 이어받기
 
         private int score;
         private int best;
@@ -49,13 +50,15 @@ namespace StudyXR.PiggySmash
 
         private void Awake()
         {
-            best = PlayerPrefs.GetInt(BestKey, 0);
+            best = PlayerPrefs.GetInt(BestKey, PlayerPrefs.GetInt(OldBestKey, 0));
+            // 점수판: 맨 위에 타이틀, 그 아래 점수
+            if (boardText != null) boardText.alignment = TextAlignmentOptions.Top;
         }
 
         private void OnEnable()
         {
             if (useRestartInput == false) return;
-            restartAction = new InputAction("Piggy Smash Restart", InputActionType.Button);
+            restartAction = new InputAction("Blacksmith Restart", InputActionType.Button);
             restartAction.AddBinding("<XRController>{RightHand}/primaryButton");
             restartAction.AddBinding("<Keyboard>/r");
             restartAction.performed += OnRestartPerformed;
@@ -151,19 +154,20 @@ namespace StudyXR.PiggySmash
             if (visible == false) return;
 
             string time = roundSeconds > 0f ? $"TIME  {Mathf.CeilToInt(remaining)}" : "FREE MODE";
+            // 타이틀은 점수판 맨 위에 원래 글자 크기로, 점수 정보는 그 아래 작게
             if (IsRunning)
             {
                 boardText.text =
-                    $"<size=60%>{title}</size>\n" +
-                    $"SCORE  {score}\n" +
-                    $"<size=70%>{time}   |   BEST  {best}</size>";
+                    $"{title}\n" +
+                    $"<size=60%>SCORE  {score}</size>\n" +
+                    $"<size=40%>{time}\nBEST  {best}</size>";
             }
             else
             {
                 boardText.text =
-                    $"<size=60%>{title}</size>\n" +
-                    $"{(breakCount > 0 ? $"FINAL  {score}" : "READY")}\n" +
-                    $"<size=60%>BEST  {best}   |   PRESS START</size>";
+                    $"{title}\n" +
+                    $"<size=60%>{(breakCount > 0 ? $"FINAL  {score}" : "READY")}</size>\n" +
+                    $"<size=40%>BEST  {best}</size>";
             }
         }
     }

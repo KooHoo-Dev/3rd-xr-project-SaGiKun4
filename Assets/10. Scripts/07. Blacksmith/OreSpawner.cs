@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace StudyXR.PiggySmash
+namespace StudyXR.Blacksmith
 {
     /// <summary>
     /// 광맥 스포너.
@@ -27,7 +27,7 @@ namespace StudyXR.PiggySmash
         }
 
         [Header("연결")]
-        [SerializeField] private PiggySmashGame game;
+        [SerializeField] private BlacksmithGame game;
 
         [Header("광맥 종류")]
         [SerializeField] private List<OreType> ores = new List<OreType>();
@@ -68,7 +68,7 @@ namespace StudyXR.PiggySmash
         [SerializeField] private float arcHeight = 0.6f;
 
         [Header("금 가는 표현")]
-        [Tooltip("OreCrack 머티리얼 (Assets/10. Scripts/07. Piggy Smash/Crack/OreCrack.mat)")]
+        [Tooltip("OreCrack 머티리얼 (Assets/10. Scripts/07. Blacksmith/Crack/OreCrack.mat)")]
         [SerializeField] private Material crackMaterial;
         [Tooltip("캐지지 않은 타격마다 나는 소리")]
         [SerializeField] private AudioClip hitClip;

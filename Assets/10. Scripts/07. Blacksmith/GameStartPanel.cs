@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace StudyXR.PiggySmash
+namespace StudyXR.Blacksmith
 {
     /// <summary>
     /// 월드 스페이스 패널의 Start 버튼으로 라운드를 시작한다.
@@ -13,7 +13,7 @@ namespace StudyXR.PiggySmash
     /// </summary>
     public class GameStartPanel : MonoBehaviour
     {
-        [SerializeField] private PiggySmashGame game;
+        [SerializeField] private BlacksmithGame game;
         [SerializeField] private Button startButton;
         [SerializeField] private TMP_Text buttonLabel;
         [SerializeField] private TMP_Text messageText;
@@ -37,7 +37,7 @@ namespace StudyXR.PiggySmash
         private void Awake()
         {
             if (panelRoot == null) panelRoot = gameObject;
-            if (game == null) game = FindAnyObjectByType<PiggySmashGame>();
+            if (game == null) game = FindAnyObjectByType<BlacksmithGame>();
             if (rack == null) rack = FindAnyObjectByType<HammerRack>();
 
             if (startButton != null) startButton.onClick.AddListener(OnStartClicked);

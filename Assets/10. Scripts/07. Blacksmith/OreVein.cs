@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 
-namespace StudyXR.PiggySmash
+namespace StudyXR.Blacksmith
 {
     /// <summary>
     /// 광맥 하나. Destroyer 태그(망치 Head Hitter)에 맞으면 채굴되어 점수 이벤트를 보내고 사라진다.
@@ -125,6 +125,9 @@ namespace StudyXR.PiggySmash
             if (mined) return;
             // collision.gameObject 는 Rigidbody 가 붙은 오브젝트 = Head Hitter
             if (collision.gameObject.CompareTag(hitterTag) == false) return;
+            // 선택된(스탠드에 올렸던) 망치로만 캘 수 있다
+            var hammer = collision.gameObject.GetComponentInParent<HammerStats>();
+            if (hammer != null && hammer.CanHit == false) return;
             if (Time.time - lastHitTime < hitCooldown) return;
             lastHitTime = Time.time;
 
