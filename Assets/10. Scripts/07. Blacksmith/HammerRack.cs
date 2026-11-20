@@ -211,16 +211,33 @@ namespace StudyXR.Blacksmith
                            (anchor != null && (neck - anchor.position).sqrMagnitude <= standRadius * standRadius);
             if (onStand)
             {
+                SkipThrowThisFrame(e);
                 PlaceOnStandOrReturn(index);
                 return;
             }
 
             if (IsInRack(neck))
             {
+                SkipThrowThisFrame(e);
                 if (Selected == index) Deselect();
                 else PutOnSlot(index);
             }
             // 그 밖의 곳: 그대로 두고, ReturnHome 이 일정 시간 뒤 제자리(선반 또는 스탠드)로 돌린다
+        }
+
+        // 놓는 순간 바로 거치(고정)하면, 같은 프레임 LateUpdate 에서 XRI 가 '던지기'(Throw On Detach)를 하려다
+        // 고정된 Rigidbody 라 경고를 남긴다. 거치하는 프레임만 던지기를 끄고 다음 프레임에 되돌린다.
+        private void SkipThrowThisFrame(Entry e)
+        {
+            if (e.grab == null || e.grab.throwOnDetach == false) return;
+            e.grab.throwOnDetach = false;
+            StartCoroutine(RestoreThrow(e.grab));
+        }
+
+        private static System.Collections.IEnumerator RestoreThrow(XRGrabInteractable grab)
+        {
+            yield return null;
+            if (grab != null) grab.throwOnDetach = true;
         }
 
         /// <summary>

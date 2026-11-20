@@ -15,6 +15,8 @@ namespace StudyXR.Blacksmith
         [Header("표시")]
         [SerializeField] private TMP_Text boardText;
         [SerializeField] private string title = "대장장이";
+        [Tooltip("라운드 중 타이틀 자리에 띄우는 '남은 시간 : N' 글자 크기 (타이틀 대비 %)")]
+        [Range(30, 100)] [SerializeField] private int timerSizePercent = 55;
         [Tooltip("라운드 중에만 점수판을 보여준다")]
         [SerializeField] private bool showBoardOnlyWhileRunning = false;
 
@@ -47,7 +49,11 @@ namespace StudyXR.Blacksmith
         {
             if (inventory == null) inventory = FindAnyObjectByType<OreInventory>();
             // 점수판: 대기 중엔 타이틀, 라운드 중엔 같은 자리에 남은 시간
-            if (boardText != null) boardText.alignment = TextAlignmentOptions.Top;
+            if (boardText != null)
+            {
+                boardText.alignment = TextAlignmentOptions.Top;
+                boardText.textWrappingMode = TextWrappingModes.NoWrap; // 한 줄 유지 → 아래 Ore Board 와 겹치지 않게
+            }
         }
 
         private void OnEnable()
@@ -138,7 +144,7 @@ namespace StudyXR.Blacksmith
             lastShownSeconds = Mathf.CeilToInt(remaining);
             // 라운드 중에는 타이틀 자리에 남은 시간을 그대로 띄운다 (아래 Ore Board 와 겹치지 않도록 한 줄만)
             if (IsRunning && roundSeconds > 0f)
-                boardText.text = $"남은 시간 {lastShownSeconds}";
+                boardText.text = $"<size={timerSizePercent}%>남은 시간 : {lastShownSeconds}</size>";
             else
                 boardText.text = title;
         }
