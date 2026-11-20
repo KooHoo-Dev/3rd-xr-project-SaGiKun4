@@ -3,43 +3,61 @@ using UnityEngine;
 namespace StudyXR.PiggySmash
 {
     /// <summary>
-    /// 망치 헤드의 '타격 판정' 콜라이더.
-    /// Kinematic Rigidbody 를 가진 별도 오브젝트에 붙이고, 헤드의 운동량(질량 × 속도)이
-    /// 기준 이상일 때만 콜라이더를 켠다. 이 오브젝트에 Destroyer 태그를 달면
-    /// Breakable 은 세게 휘두른 헤드에만 부서진다.
+    /// 망치 헤드의 '타격 판정' 콜라이더. 스윙 거리로 판정한다.
+    ///
+    /// 1. 출발점: 헤드가 느릴 때(swingStartSpeed 미만)는 출발점을 계속 현재 위치로 갱신한다.
+    ///    속도가 오르기 시작하면 그 자리가 출발점으로 고정된다.
+    ///    휘두르던 방향이 크게 꺾이면(되돌아오면) 그 지점에서 출발점을 다시 잡는다.
+    ///    → 눈앞에서 짧게 휘적이는 동작은 매번 출발점이 바뀌어 거리가 쌓이지 않는다.
+    /// 2. 판정: 출발점에서 minSwingDistance 이상 멀어졌고 헤드 속도가 minHitSpeed 이상일 때만 콜라이더를 켠다.
+    /// 3. 데미지: 기본 공격력 + 충돌 속도 가산점 (bonusStartSpeed 부터 bonusSpeedPerPoint 마다 +1, 최대 maxBonus).
+    ///    한 번 맞히면 출발점을 다시 잡으므로, 다음 타격은 다시 휘둘러야 한다.
     /// </summary>
     [RequireComponent(typeof(Rigidbody))]
     public class MalletHitter : MonoBehaviour
     {
-        public enum Measure { Momentum, Speed }
-
         [Header("연결")]
         [Tooltip("켜고 끌 타격 콜라이더 (비우면 이 오브젝트의 Collider)")]
         [SerializeField] private Collider hitCollider;
-        [Tooltip("망치 본체 Rigidbody (비우면 부모에서 찾음). 질량과 속도 계산에 사용")]
+        [Tooltip("망치 본체 Rigidbody (비우면 부모에서 찾음)")]
         [SerializeField] private Rigidbody ownerBody;
 
-        [Header("판정 기준")]
-        [SerializeField] private Measure measure = Measure.Momentum;
-        [Tooltip("운동량 기준 (kg·m/s). 망치 질량 0.9kg 기준 1.8 ≈ 헤드 속도 2m/s")]
-        [SerializeField] private float minMomentum = 1.8f;
-        [Tooltip("속도 기준 (m/s)")]
-        [SerializeField] private float minSpeed = 2.0f;
-        [Tooltip("기준 아래로 떨어진 뒤에도 이 시간 동안은 켜 둔다 (깜빡임·프레임 누락 방지)")]
-        [SerializeField] private float holdSeconds = 0.08f;
+        [Header("스윙 판정")]
+        [Tooltip("이 속도(m/s) 아래에서는 출발점을 현재 위치로 계속 갱신한다")]
+        [SerializeField] private float swingStartSpeed = 1.0f;
+        [Tooltip("출발점에서 이 거리(m) 이상 휘둘러야 타격으로 인정")]
+        [SerializeField] private float minSwingDistance = 0.35f;
+        [Tooltip("충돌 순간 헤드 속도가 이 값(m/s) 이상이어야 타격으로 인정")]
+        [SerializeField] private float minHitSpeed = 1.5f;
+        [Tooltip("휘두르는 방향이 출발점→현재 방향과 이 각도(도) 이상 벌어지면 출발점을 다시 잡는다")]
+        [Range(30f, 180f)] [SerializeField] private float reverseAngle = 100f;
+        [Tooltip("조건을 벗어난 뒤에도 이 시간 동안은 켜 둔다 (프레임 누락 방지)")]
+        [SerializeField] private float holdSeconds = 0.05f;
+
+        [Header("속도 가산 데미지")]
+        [Tooltip("이 속도(m/s)부터 가산점이 붙는다")]
+        [SerializeField] private float bonusStartSpeed = 3f;
+        [Tooltip("bonusStartSpeed 이후 이 속도(m/s)마다 +1")]
+        [Min(0.1f)] [SerializeField] private float bonusSpeedPerPoint = 2f;
+        [Tooltip("가산점 최대치")]
+        [Min(0)] [SerializeField] private int maxBonus = 2;
 
         [Header("디버그")]
         [SerializeField] private bool logHits;
+        [SerializeField] private bool drawSwingGizmo = true;
 
         private Rigidbody body;
         private Collider[] ownColliders;
         private Vector3 lastPosition;
-        private float lastFastTime = float.NegativeInfinity;
+        private Vector3 swingStart;
+        private float lastValidTime = float.NegativeInfinity;
+        private float consumedAt = float.NegativeInfinity;
+        private int consumedDamage;
 
         /// <summary>현재 헤드 속도 (m/s)</summary>
         public float CurrentSpeed { get; private set; }
-        /// <summary>현재 운동량 (kg·m/s)</summary>
-        public float CurrentMomentum => CurrentSpeed * (ownerBody != null ? ownerBody.mass : 1f);
+        /// <summary>출발점에서 현재 위치까지 거리 (m)</summary>
+        public float SwingDistance => (transform.position - swingStart).magnitude;
         public bool IsArmed => hitCollider != null && hitCollider.enabled;
 
         private void Awake()
@@ -52,7 +70,7 @@ namespace StudyXR.PiggySmash
             if (hitCollider == null) hitCollider = GetComponent<Collider>();
             if (ownerBody == null && transform.parent != null) ownerBody = transform.parent.GetComponentInParent<Rigidbody>();
 
-            // 망치 자신의 콜라이더(손잡이·헤드)와는 부딪히지 않게
+            // 망치 자신의 콜라이더(손잡이 등)와는 부딪히지 않게
             var list = new System.Collections.Generic.List<Collider>();
             if (ownerBody != null)
                 foreach (var c in ownerBody.GetComponentsInChildren<Collider>(true))
@@ -65,7 +83,8 @@ namespace StudyXR.PiggySmash
         private void OnEnable()
         {
             lastPosition = transform.position;
-            lastFastTime = float.NegativeInfinity;
+            swingStart = lastPosition;
+            lastValidTime = float.NegativeInfinity;
         }
 
         private void OnDisable()
@@ -75,24 +94,60 @@ namespace StudyXR.PiggySmash
 
         private void FixedUpdate()
         {
-            // 1) 위치 변화량으로 구한 속도 (손으로 직접 움직이는 경우에도 동작)
             Vector3 position = transform.position;
-            float deltaSpeed = (position - lastPosition).magnitude / Time.fixedDeltaTime;
-            lastPosition = position;
+            Vector3 delta = position - lastPosition;
 
-            // 2) 본체 Rigidbody 가 물리로 움직일 때 헤드 지점의 속도
+            // 헤드 속도: 위치 변화량, 또는 본체가 물리로 움직일 때 헤드 지점 속도 중 큰 값
+            float deltaSpeed = delta.magnitude / Time.fixedDeltaTime;
             float bodySpeed = 0f;
             if (ownerBody != null && ownerBody.isKinematic == false)
                 bodySpeed = ownerBody.GetPointVelocity(position).magnitude;
-
             CurrentSpeed = Mathf.Max(deltaSpeed, bodySpeed);
 
-            bool fast = measure == Measure.Momentum
-                ? CurrentMomentum >= minMomentum
-                : CurrentSpeed >= minSpeed;
-            if (fast) lastFastTime = Time.time;
+            // 1. 출발점 갱신
+            if (CurrentSpeed < swingStartSpeed)
+            {
+                swingStart = position; // 느리면 여기서부터 다시
+            }
+            else
+            {
+                Vector3 swing = position - swingStart;
+                if (swing.sqrMagnitude > 0.05f * 0.05f && delta.sqrMagnitude > 1e-8f &&
+                    Vector3.Angle(delta, swing) > reverseAngle)
+                {
+                    swingStart = lastPosition; // 되돌아오는 지점에서 새 스윙
+                }
+            }
+            lastPosition = position;
 
-            SetArmed(Time.time - lastFastTime <= holdSeconds);
+            // 2. 판정
+            bool valid = SwingDistance >= minSwingDistance && CurrentSpeed >= minHitSpeed;
+            if (valid) lastValidTime = Time.time;
+            SetArmed(Time.time - lastValidTime <= holdSeconds);
+        }
+
+        /// <summary>
+        /// 광맥이 맞았을 때 호출한다. 기본 공격력 + 속도 가산점을 돌려주고, 스윙을 새로 시작시킨다.
+        /// 같은 물리 프레임에 여러 광맥을 맞히면 모두 같은 데미지를 받는다.
+        /// </summary>
+        public int ConsumeHit(int baseDamage)
+        {
+            if (Mathf.Approximately(consumedAt, Time.fixedTime)) return consumedDamage;
+
+            float distance = SwingDistance;
+            int bonus = CurrentSpeed > bonusStartSpeed
+                ? Mathf.Min(maxBonus, 1 + Mathf.FloorToInt((CurrentSpeed - bonusStartSpeed) / bonusSpeedPerPoint))
+                : 0;
+            consumedDamage = Mathf.Max(1, baseDamage) + bonus;
+            consumedAt = Time.fixedTime;
+
+            if (logHits)
+                Debug.Log($"[MalletHitter] 타격 — 스윙 거리 {distance:F2} m, 속도 {CurrentSpeed:F2} m/s, 데미지 {baseDamage} + {bonus}", this);
+
+            // 한 번 맞혔으면 다시 휘둘러야 한다
+            swingStart = transform.position;
+            lastValidTime = float.NegativeInfinity;
+            return consumedDamage;
         }
 
         private void SetArmed(bool on)
@@ -106,10 +161,12 @@ namespace StudyXR.PiggySmash
                     if (c != null) Physics.IgnoreCollision(hitCollider, c, true);
         }
 
-        private void OnCollisionEnter(Collision collision)
+        private void OnDrawGizmos()
         {
-            if (logHits)
-                Debug.Log($"[MalletHitter] {collision.gameObject.name} 타격 — 속도 {CurrentSpeed:F2} m/s, 운동량 {CurrentMomentum:F2}", this);
+            if (drawSwingGizmo == false || Application.isPlaying == false) return;
+            Gizmos.color = IsArmed ? Color.red : (SwingDistance >= minSwingDistance ? Color.yellow : Color.gray);
+            Gizmos.DrawLine(swingStart, transform.position);
+            Gizmos.DrawWireSphere(swingStart, 0.02f);
         }
     }
 }

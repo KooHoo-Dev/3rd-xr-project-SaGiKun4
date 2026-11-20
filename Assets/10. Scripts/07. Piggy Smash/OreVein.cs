@@ -128,9 +128,12 @@ namespace StudyXR.PiggySmash
             if (Time.time - lastHitTime < hitCooldown) return;
             lastHitTime = Time.time;
 
-            // 망치 공격력만큼 타수를 깎는다 (없으면 1). 공격 범위는 망치 Head Hitter 콜라이더 크기
+            // 망치 공격력(없으면 1) + 스윙 속도 가산점만큼 타수를 깎는다. 공격 범위는 망치 Head Hitter 콜라이더 크기
             var stats = collision.gameObject.GetComponentInParent<HammerStats>();
-            TakeHit(collision.gameObject, stats != null ? stats.Damage : 1);
+            int damage = stats != null ? stats.Damage : 1;
+            var hitter = collision.gameObject.GetComponent<MalletHitter>();
+            if (hitter != null) damage = hitter.ConsumeHit(damage);
+            TakeHit(collision.gameObject, damage);
         }
 
         public void TakeHit(GameObject breaker) => TakeHit(breaker, 1);
