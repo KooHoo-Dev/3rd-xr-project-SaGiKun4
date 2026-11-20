@@ -6196,7 +6196,7 @@ MonoBehaviour:
   openSeconds: 0.6
   closeOnRoundEnd: 1
   openClip: {fileID: 8300000, guid: 222bd2e8f1ddf644fb98d56e83028053, type: 3}
-  playOnClose: 0
+  playOnClose: 1
   volume: 1
 --- !u!114 &1155406661
 MonoBehaviour:
@@ -7783,7 +7783,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 8300000, guid: e1b59d006c163304183775b0cf66ff77, type: 3}
   m_PlayOnAwake: 1
-  m_Volume: 0.8
+  m_Volume: 1
   m_Pitch: 1
   Loop: 1
   Mute: 0
@@ -7791,8 +7791,8 @@ AudioSource:
   SpatializePostEffects: 0
   Priority: 128
   DopplerLevel: 0
-  MinDistance: 1
-  MaxDistance: 10
+  MinDistance: 3
+  MaxDistance: 20
   Pan2D: 0
   rolloffMode: 1
   BypassEffects: 0
@@ -9614,7 +9614,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 8300000, guid: eab0d28b2ab78cc48b39a6d3ff265196, type: 3}
   m_PlayOnAwake: 1
-  m_Volume: 0.4
+  m_Volume: 1
   m_Pitch: 1
   Loop: 1
   Mute: 0
