@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
+using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
 namespace StudyXR.PiggySmash
 {
@@ -74,6 +75,12 @@ namespace StudyXR.PiggySmash
             if (IsUnlocked(Selected) == false) Selected = 0;
 
             if (game != null) game.RoundEnded += OnRoundEnded;
+
+            // 거치대(XRI StickStand)의 소켓은 망치를 손잡이 Attach 기준으로 다시 끼워 넣으므로 끈다.
+            // 망치 위치는 Neck 기준으로만 정한다.
+            if (anchor != null)
+                foreach (var socket in anchor.GetComponentsInParent<XRSocketInteractor>(true))
+                    socket.enabled = false;
         }
 
         private void OnDestroy()
@@ -143,7 +150,6 @@ namespace StudyXR.PiggySmash
             t.SetParent(e.rackParent, false);
             t.localPosition = e.rackLocalPosition;
             t.localRotation = e.rackLocalRotation;
-            SetHome(e.hammer);
         }
 
         private void PutOnStand(int index)
@@ -152,20 +158,22 @@ namespace StudyXR.PiggySmash
             if (e == null || e.hammer == null) return;
             var t = e.hammer.transform;
             t.SetParent(null, true); // 선반을 따라 움직이지 않도록
-
-            if (anchor != null)
-            {
-                if (e.neck != null)
-                {
-                    // Neck 이 anchor 와 같은 위치·방향이 되도록 루트를 옮긴다
-                    Quaternion neckLocal = Quaternion.Inverse(t.rotation) * e.neck.rotation;
-                    t.rotation = anchor.rotation * Quaternion.Inverse(neckLocal);
-                    t.position += anchor.position - e.neck.position;
-                }
-                else t.SetPositionAndRotation(anchor.position, anchor.rotation);
-            }
-            SetHome(e.hammer);
             SetGrabbable(e.hammer, true);
+
+            // 위치는 Neck 기준 한 곳에서만 정한다: ReturnHome 의 기준점 = Neck, 제자리 = anchor
+            var home = e.hammer.GetComponent<ReturnHome>();
+            if (home != null && anchor != null)
+            {
+                home.SetPivot(e.neck);
+                home.SetHome(anchor.position, anchor.rotation);
+                home.GoHome();
+            }
+            else if (anchor != null && e.neck != null)
+            {
+                Quaternion neckLocal = Quaternion.Inverse(t.rotation) * e.neck.rotation;
+                t.rotation = anchor.rotation * Quaternion.Inverse(neckLocal);
+                t.position += anchor.position - e.neck.position;
+            }
         }
 
         private static void SetGrabbable(GameObject hammer, bool on)
@@ -184,12 +192,6 @@ namespace StudyXR.PiggySmash
             }
             var home = hammer.GetComponent<ReturnHome>();
             if (home != null) home.enabled = on;
-        }
-
-        private static void SetHome(GameObject hammer)
-        {
-            var home = hammer.GetComponent<ReturnHome>();
-            if (home != null) home.SetHome(hammer.transform.position, hammer.transform.rotation);
         }
 
         private void OnRoundEnded()
