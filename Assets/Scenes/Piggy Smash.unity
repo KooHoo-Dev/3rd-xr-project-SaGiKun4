@@ -1551,19 +1551,19 @@ MonoBehaviour:
   - name: Bronze
     prefab: {fileID: 3176191598947822011, guid: 67faaefcbe80e034d9d7a1130d3cd4bf, type: 3}
     points: 1
-    hitsToMine: 1
+    hitsToMine: 10
     weight: 6
     popupColor: {r: 0.85, g: 0.55, b: 0.3, a: 1}
   - name: Silver
     prefab: {fileID: 9037540739256695866, guid: b755796dfafc2ef458a46f492a6b71f0, type: 3}
     points: 5
-    hitsToMine: 3
+    hitsToMine: 30
     weight: 3
     popupColor: {r: 0.85, g: 0.9, b: 1, a: 1}
   - name: Gold
     prefab: {fileID: 4778066955128460072, guid: ca0870e179e3b9c4191afdce7ec54f41, type: 3}
     points: 10
-    hitsToMine: 5
+    hitsToMine: 50
     weight: 1
     popupColor: {r: 1, g: 0.84, b: 0.2, a: 1}
   spawnPoints:

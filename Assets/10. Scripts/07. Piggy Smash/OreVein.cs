@@ -13,7 +13,7 @@ namespace StudyXR.PiggySmash
         [SerializeField] private string hitterTag = "Destroyer";
         [SerializeField] private string oreName = "Ore";
         [SerializeField] private int points = 1;
-        [Tooltip("캐기까지 때려야 하는 횟수 (Bronze 1 / Silver 3 / Gold 5)")]
+        [Tooltip("광맥 체력 = 캐기까지 깎아야 하는 타수 (Bronze 10 / Silver 30 / Gold 50). 한 번 맞을 때 망치 공격력 + 스윙 거리 가산점만큼 깎인다")]
         [Min(1)] [SerializeField] private int hitsToMine = 1;
         [Tooltip("한 번 휘두를 때 여러 번 맞은 것으로 세지 않도록 타격 사이 최소 간격 (초)")]
         [SerializeField] private float hitCooldown = 0.3f;
