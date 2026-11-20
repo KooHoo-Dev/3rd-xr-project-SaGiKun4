@@ -92036,6 +92036,9 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 5f5871ceb1466c5429f93d4da73ec526, type: 3}
   - {fileID: 8300000, guid: 4ad62d10c4b3c4643829d190f1ca31f7, type: 3}
   dropVolume: 1
+  coinGetClip: {fileID: 8300000, guid: 8bccd24933c76dd4bbf778d053edac6e, type: 3}
+  coinUseClip: {fileID: 8300000, guid: ffbce1da8c705b9458ef623aef4fb86b, type: 3}
+  coinVolume: 1
 --- !u!4 &8052383134273997406
 Transform:
   m_ObjectHideFlags: 0

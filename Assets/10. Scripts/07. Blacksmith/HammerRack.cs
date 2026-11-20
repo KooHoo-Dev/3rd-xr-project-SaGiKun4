@@ -65,6 +65,13 @@ namespace StudyXR.Blacksmith
         [Tooltip("선택된 망치가 손을 떠난 채로 부딪힐 때 랜덤 재생 (Drop1~4)")]
         [SerializeField] private AudioClip[] dropClips;
         [Range(0f, 1f)] [SerializeField] private float dropVolume = 1f;
+        [Tooltip("코인을 얻을 때 (납품 보상)")]
+        [SerializeField] private AudioClip coinGetClip;
+        [Tooltip("코인을 쓸 때 (망치 해금, 장부 계약)")]
+        [SerializeField] private AudioClip coinUseClip;
+        [Range(0f, 1f)] [SerializeField] private float coinVolume = 1f;
+
+        private AudioSource coinAudio;
 
         private const string CoinsKey = "Blacksmith.Coins";
         private const string SelectedKey = "Blacksmith.Selected";
@@ -92,6 +99,11 @@ namespace StudyXR.Blacksmith
                 foreach (var c in anchor.GetComponentsInParent<Collider>(true))
                     if (c.isTrigger) { standArea = c; break; }
             Coins = PlayerPrefs.GetInt(CoinsKey, 0);
+
+            // 코인 소리는 UI 효과음이라 거리와 상관없이 들리게 2D 로 재생
+            coinAudio = gameObject.AddComponent<AudioSource>();
+            coinAudio.playOnAwake = false;
+            coinAudio.spatialBlend = 0f;
 
             for (int i = 0; i < hammers.Count; ++i)
             {
@@ -189,6 +201,7 @@ namespace StudyXR.Blacksmith
             var e = Get(index);
             if (e == null || Coins < e.cost) return false;
             Coins -= e.cost;
+            PlayCoin(coinUseClip);
             PlayerPrefs.SetInt(CoinsKey, Coins);
             PlayerPrefs.SetInt(UnlockPrefix + index, 1);
             PlayerPrefs.Save();
@@ -385,9 +398,15 @@ namespace StudyXR.Blacksmith
         {
             if (amount <= 0) return;
             Coins += amount;
+            PlayCoin(coinGetClip);
             PlayerPrefs.SetInt(CoinsKey, Coins);
             PlayerPrefs.Save();
             Changed?.Invoke();
+        }
+
+        private void PlayCoin(AudioClip clip)
+        {
+            if (clip != null && coinAudio != null) coinAudio.PlayOneShot(clip, coinVolume);
         }
 
         /// <summary>코인이 충분하면 빼고 true (광물 장부 계약 체결).</summary>
@@ -395,6 +414,7 @@ namespace StudyXR.Blacksmith
         {
             if (amount < 0 || Coins < amount) return false;
             Coins -= amount;
+            if (amount > 0) PlayCoin(coinUseClip);
             PlayerPrefs.SetInt(CoinsKey, Coins);
             PlayerPrefs.Save();
             Changed?.Invoke();
