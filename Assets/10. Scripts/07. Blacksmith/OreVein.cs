@@ -17,7 +17,13 @@ namespace StudyXR.Blacksmith
         [Min(1)] [SerializeField] private int hitsToMine = 1;
         [Tooltip("한 번 휘두를 때 여러 번 맞은 것으로 세지 않도록 타격 사이 최소 간격 (초)")]
         [SerializeField] private float hitCooldown = 0.3f;
-        [SerializeField] private AudioClip hitClip;
+        [Tooltip("맞을 때마다 랜덤으로 하나 재생 (Pick1~6)")]
+        [SerializeField] private AudioClip[] hitClips;
+        [Tooltip("맞은 뒤 돌 크기가 줄어들 때 랜덤으로 하나 재생 (Stone1~5)")]
+        [SerializeField] private AudioClip[] stoneClips;
+        [Tooltip("채굴된 광물이 화로(sinkTarget)에 들어갔을 때 랜덤으로 하나 재생 (Fire1~3)")]
+        [SerializeField] private AudioClip[] sinkClips;
+        [Range(0f, 1f)] [SerializeField] private float sfxVolume = 1f;
 
         [Header("돌 크기 (돌을 깎아 광물이 드러나는 느낌)")]
         [Tooltip("크기를 바꿀 돌 부분 자식 이름. 광물 부분(Ore_low)은 그대로 둔다")]
@@ -92,12 +98,27 @@ namespace StudyXR.Blacksmith
         }
 
         /// <summary>필요 타격 수와 금 가는 머티리얼</summary>
-        public void SetupHits(int required, Material crack, AudioClip clip)
+        public void SetupHits(int required, Material crack)
         {
             hitsToMine = Mathf.Max(1, required);
             crackMaterial = crack;
-            hitClip = clip;
             AttachCrackOverlay();
+        }
+
+        /// <summary>타격(Pick) / 돌 깎임(Stone) / 화로 투입(Fire) 소리</summary>
+        public void SetupSounds(AudioClip[] hit, AudioClip[] stone, AudioClip[] sink, float volume)
+        {
+            hitClips = hit;
+            stoneClips = stone;
+            sinkClips = sink;
+            sfxVolume = volume;
+        }
+
+        private void PlayRandom(AudioClip[] clips, Vector3 position)
+        {
+            if (clips == null || clips.Length == 0) return;
+            var clip = clips[UnityEngine.Random.Range(0, clips.Length)];
+            if (clip != null) AudioSource.PlayClipAtPoint(clip, position, sfxVolume);
         }
 
         /// <summary>채굴 후 빨려들어갈 대상과 비행 설정</summary>
@@ -145,6 +166,7 @@ namespace StudyXR.Blacksmith
         {
             if (mined) return;
             hits += Mathf.Max(1, damage);
+            PlayRandom(hitClips, transform.position);
             if (hits >= hitsToMine)
             {
                 Mine(breaker);
@@ -153,7 +175,6 @@ namespace StudyXR.Blacksmith
 
             SetCrack((float)hits / hitsToMine);
             ScaleRock(RockFactor(hits, hitsToMine));
-            if (hitClip != null) AudioSource.PlayClipAtPoint(hitClip, transform.position);
             Hit?.Invoke(this, hits);
             StopPunch();
             punchScale = transform.localScale;
@@ -262,6 +283,7 @@ namespace StudyXR.Blacksmith
             Vector3 target = rockBaseScale * rockLastScale;
             if ((from - target).sqrMagnitude > 1e-6f)
             {
+                PlayRandom(stoneClips, transform.position);
                 for (float t = 0f; t < revealSeconds; t += Time.deltaTime)
                 {
                     rock.localScale = Vector3.Lerp(from, target, Mathf.SmoothStep(0f, 1f, t / revealSeconds));
@@ -302,6 +324,7 @@ namespace StudyXR.Blacksmith
                 transform.localScale = startScale * Mathf.Lerp(1f, endScale, k * k);
                 yield return null;
             }
+            PlayRandom(sinkClips, sinkTarget != null ? sinkTarget.position : transform.position);
             Destroy(gameObject);
         }
 
@@ -394,7 +417,9 @@ namespace StudyXR.Blacksmith
         {
             if (rock == null) return;
             if (rockAnim != null) StopCoroutine(rockAnim);
-            rockAnim = StartCoroutine(AnimateRock(rockBaseScale * factor));
+            Vector3 target = rockBaseScale * factor;
+            if ((rock.localScale - target).sqrMagnitude > 1e-6f) PlayRandom(stoneClips, transform.position);
+            rockAnim = StartCoroutine(AnimateRock(target));
         }
 
         private IEnumerator AnimateRock(Vector3 target)

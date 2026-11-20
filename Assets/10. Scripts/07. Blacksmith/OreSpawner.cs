@@ -71,8 +71,15 @@ namespace StudyXR.Blacksmith
         [Header("금 가는 표현")]
         [Tooltip("OreCrack 머티리얼 (Assets/10. Scripts/07. Blacksmith/Crack/OreCrack.mat)")]
         [SerializeField] private Material crackMaterial;
-        [Tooltip("캐지지 않은 타격마다 나는 소리")]
-        [SerializeField] private AudioClip hitClip;
+
+        [Header("소리")]
+        [Tooltip("망치로 광물을 맞힐 때마다 랜덤 재생 (Pick1~6)")]
+        [SerializeField] private AudioClip[] hitClips;
+        [Tooltip("맞은 뒤 돌 크기가 줄어들 때 랜덤 재생 (Stone1~5)")]
+        [SerializeField] private AudioClip[] stoneClips;
+        [Tooltip("채굴된 광물이 화로에 들어갔을 때 랜덤 재생 (Fire1~3)")]
+        [SerializeField] private AudioClip[] sinkClips;
+        [Range(0f, 1f)] [SerializeField] private float sfxVolume = 1f;
 
         [Header("연출")]
         [SerializeField] private float popInSeconds = 0.25f;
@@ -182,7 +189,8 @@ namespace StudyXR.Blacksmith
             if (vein == null) vein = go.AddComponent<OreVein>();
             vein.Setup(type.name, type.points, breakEffect, breakClip);
             vein.SetupSink(sinkTarget, flySeconds, arcHeight);
-            vein.SetupHits(type.hitsToMine, crackMaterial, hitClip);
+            vein.SetupHits(type.hitsToMine, crackMaterial);
+            vein.SetupSounds(hitClips, stoneClips, sinkClips, sfxVolume);
             vein.Mined += (v, breaker) => OnMined(v, type);
             alive.Add(vein);
 
