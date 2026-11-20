@@ -6195,6 +6195,9 @@ MonoBehaviour:
   openAngle: 35
   openSeconds: 0.6
   closeOnRoundEnd: 1
+  openClip: {fileID: 8300000, guid: 222bd2e8f1ddf644fb98d56e83028053, type: 3}
+  playOnClose: 0
+  volume: 1
 --- !u!114 &1155406661
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -21,8 +21,16 @@ namespace StudyXR.Blacksmith
         [SerializeField] private float openSeconds = 0.6f;
         [SerializeField] private bool closeOnRoundEnd = true;
 
+        [Header("소리")]
+        [Tooltip("문이 열리는 동안 재생할 소리 (Door)")]
+        [SerializeField] private AudioClip openClip;
+        [Tooltip("켜면 닫힐 때도 같은 소리를 재생")]
+        [SerializeField] private bool playOnClose;
+        [Range(0f, 1f)] [SerializeField] private float volume = 1f;
+
         private Quaternion closedRotation;
         private Coroutine anim;
+        private AudioSource audioSource;
 
         private void Awake()
         {
@@ -32,7 +40,19 @@ namespace StudyXR.Blacksmith
                 if (found != null) door = found.transform;
             }
             if (door == null) Debug.LogWarning($"[OvenDoorOpener] '{doorName}' 를 찾지 못했습니다.", this);
-            else closedRotation = door.localRotation;
+            else
+            {
+                closedRotation = door.localRotation;
+                // 문 위치에서 소리가 나도록 문에 3D AudioSource 를 붙인다
+                audioSource = door.GetComponent<AudioSource>();
+                if (audioSource == null) audioSource = door.gameObject.AddComponent<AudioSource>();
+                audioSource.playOnAwake = false;
+                audioSource.loop = false;
+                audioSource.spatialBlend = 1f;
+                audioSource.rolloffMode = AudioRolloffMode.Linear;
+                audioSource.minDistance = 1f;
+                audioSource.maxDistance = 15f;
+            }
         }
 
         private void OnEnable()
@@ -55,19 +75,43 @@ namespace StudyXR.Blacksmith
             if (game == null || game.IsRunning) Open();
         }
 
-        public void Open() => RotateTo(closedRotation * Quaternion.Euler(0f, openAngle, 0f));
-        public void Close() => RotateTo(closedRotation);
+        public void Open()
+        {
+            if (RotateTo(closedRotation * Quaternion.Euler(0f, openAngle, 0f))) PlaySound();
+        }
+
+        public void Close()
+        {
+            if (RotateTo(closedRotation) && playOnClose) PlaySound();
+        }
+
+        private void PlaySound()
+        {
+            if (audioSource == null || openClip == null) return;
+            audioSource.Stop();
+            audioSource.clip = openClip;
+            audioSource.volume = volume;
+            audioSource.Play();
+        }
 
         private void OnRoundEnded()
         {
             if (closeOnRoundEnd) Close();
         }
 
-        private void RotateTo(Quaternion target)
+        // 실제로 움직일 때만 true (이미 그 각도면 소리를 내지 않는다)
+        private bool RotateTo(Quaternion target)
         {
-            if (door == null) return;
+            if (door == null) return false;
             if (anim != null) StopCoroutine(anim);
+            anim = null;
+            if (Quaternion.Angle(door.localRotation, target) < 0.5f)
+            {
+                door.localRotation = target;
+                return false;
+            }
             anim = StartCoroutine(Animate(target));
+            return true;
         }
 
         private IEnumerator Animate(Quaternion target)
