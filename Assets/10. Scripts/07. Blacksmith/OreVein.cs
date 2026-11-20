@@ -154,7 +154,7 @@ namespace StudyXR.Blacksmith
 
             // 망치 공격력(없으면 1) + 스윙 속도 가산점만큼 타수를 깎는다. 공격 범위는 망치 Head Hitter 콜라이더 크기
             var stats = collision.gameObject.GetComponentInParent<HammerStats>();
-            int damage = stats != null ? stats.Damage : 1;
+            int damage = (stats != null ? stats.Damage : 1) + BlacksmithUpgrades.DamageBonus; // 무른 광물 강화
             var hitter = collision.gameObject.GetComponent<MalletHitter>();
             if (hitter != null) damage = hitter.ConsumeHit(damage);
             TakeHit(collision.gameObject, damage);

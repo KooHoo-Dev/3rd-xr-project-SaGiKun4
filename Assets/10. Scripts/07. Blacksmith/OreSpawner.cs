@@ -50,6 +50,8 @@ namespace StudyXR.Blacksmith
         [Header("스폰 규칙")]
         [SerializeField] private float minInterval = 3f;
         [SerializeField] private float maxInterval = 5f;
+        [Tooltip("빠른 연락 강화로 줄어드는 생성 주기의 하한 (초)")]
+        [SerializeField] private float minIntervalFloor = 0.8f;
         [SerializeField] private int minPerWave = 1;
         [SerializeField] private int maxPerWave = 3;
         [Tooltip("동시에 존재할 수 있는 최대 개수. 0 이면 제한 없음")]
@@ -155,15 +157,17 @@ namespace StudyXR.Blacksmith
             {
                 SpawnWave();
                 float wait = Random.Range(Mathf.Min(minInterval, maxInterval), Mathf.Max(minInterval, maxInterval));
+                wait = Mathf.Max(minIntervalFloor, wait * BlacksmithUpgrades.IntervalMultiplier); // 빠른 연락 강화
                 yield return new WaitForSeconds(wait);
                 if (game != null && game.IsRunning == false) yield break;
             }
         }
 
-        /// <summary>1~3개(minPerWave~maxPerWave)를 한 번에 생성</summary>
+        /// <summary>minPerWave~maxPerWave 개 (+ 추가 계약 레벨) 를 한 번에 생성</summary>
         public void SpawnWave()
         {
             int count = Random.Range(Mathf.Min(minPerWave, maxPerWave), Mathf.Max(minPerWave, maxPerWave) + 1);
+            count += BlacksmithUpgrades.ExtraPerWave; // 추가 계약 강화
             for (int i = 0; i < count; ++i)
             {
                 if (maxAlive > 0 && alive.Count >= maxAlive) return;

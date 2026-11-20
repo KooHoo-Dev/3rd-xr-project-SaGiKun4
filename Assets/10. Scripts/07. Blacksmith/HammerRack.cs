@@ -381,6 +381,17 @@ namespace StudyXR.Blacksmith
             Changed?.Invoke();
         }
 
+        /// <summary>코인이 충분하면 빼고 true (광물 장부 계약 체결).</summary>
+        public bool TrySpendCoins(int amount)
+        {
+            if (amount < 0 || Coins < amount) return false;
+            Coins -= amount;
+            PlayerPrefs.SetInt(CoinsKey, Coins);
+            PlayerPrefs.Save();
+            Changed?.Invoke();
+            return true;
+        }
+
         private static Transform FindChild(Transform parent, string name)
         {
             foreach (var t in parent.GetComponentsInChildren<Transform>(true))
