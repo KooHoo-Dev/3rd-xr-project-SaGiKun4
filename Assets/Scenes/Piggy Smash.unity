@@ -4570,6 +4570,7 @@ GameObject:
   - component: {fileID: 1155406654}
   - component: {fileID: 1155406655}
   - component: {fileID: 1155406660}
+  - component: {fileID: 1155406661}
   m_Layer: 0
   m_Name: Piggy Smash Game
   m_TagString: Untagged
@@ -4633,6 +4634,20 @@ MonoBehaviour:
   openAngle: 35
   openSeconds: 0.6
   closeOnRoundEnd: 1
+--- !u!114 &1155406661
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1155406653}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 261c05a5d161496b985651dd36690abe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StudyXR.PiggySmash.GrabDistanceLimiter
+  minDistance: 0
+  maxDistance: 1.5
 --- !u!1 &1185806278
 GameObject:
   m_ObjectHideFlags: 0
