@@ -57,6 +57,14 @@ namespace StudyXR.PiggySmash
             if (Time.time - releasedTime >= idleReturnSeconds) GoHome();
         }
 
+        /// <summary>복귀할 위치를 바꾼다 (망치 선택 시 거치대 위치로)</summary>
+        public void SetHome(Vector3 position, Quaternion rotation)
+        {
+            homePosition = position;
+            homeRotation = rotation;
+            releasedTime = -1f;
+        }
+
         public void GoHome()
         {
             releasedTime = -1f;

@@ -13,7 +13,7 @@ namespace StudyXR.PiggySmash
     {
         [Header("표시")]
         [SerializeField] private TMP_Text boardText;
-        [SerializeField] private string title = "ORE SMASH";
+        [SerializeField] private string title = "대장장이";
         [Tooltip("라운드 중에만 점수판을 보여준다 (대기·결과는 시작 패널이 표시)")]
         [SerializeField] private bool showBoardOnlyWhileRunning = true;
 

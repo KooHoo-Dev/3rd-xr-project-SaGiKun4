@@ -299,8 +299,8 @@ namespace StudyXR.PiggySmash.EditorTools
             Quaternion oldRot = keepPose ? old.rotation : Quaternion.identity;
             if (old != null) Undo.DestroyObjectImmediate(old.gameObject);
 
-            var progress = Object.FindAnyObjectByType<HammerProgress>(FindObjectsInactive.Include);
-            bool withShop = progress != null;
+            var rack = Object.FindAnyObjectByType<HammerRack>(FindObjectsInactive.Include);
+            bool withShop = rack != null;
 
             // 1. 패널 (Canvas World Space + TrackedDeviceGraphicRaycaster)
             var panel = (GameObject)PrefabUtility.InstantiatePrefab(panelPrefab, game.transform);
@@ -335,7 +335,7 @@ namespace StudyXR.PiggySmash.EditorTools
             // 3. 안내 문구 (위쪽)
             var message = CreatePanelText(panel, "Message",
                 withShop ? new Vector2(0f, 0.68f) : new Vector2(0f, 0.4f), new Vector2(1f, 1f), 56f);
-            message.text = "ORE SMASH";
+            message.text = GameTitle;
 
             // 4. Start 버튼 (XRI Examples TextButton, 아래쪽)
             var (button, label) = CreatePanelButton(panel, buttonPrefab, "Start Button",
@@ -350,7 +350,7 @@ namespace StudyXR.PiggySmash.EditorTools
             so.FindProperty("messageText").objectReferenceValue = message;
             so.ApplyModifiedPropertiesWithoutUndo();
 
-            // 6. 망치 상점 (씬에 HammerProgress 가 있을 때만): 정보 + [<] [BUY/EQUIP] [>]
+            // 6. 망치 선택 (씬에 HammerRack 이 있을 때만): 정보 + [<] [BUY/SELECT] [>]
             if (withShop)
             {
                 var info = CreatePanelText(panel, "Shop Info", new Vector2(0f, 0.34f), new Vector2(1f, 0.66f), 40f);
@@ -361,7 +361,7 @@ namespace StudyXR.PiggySmash.EditorTools
 
                 var shop = panel.AddComponent<HammerShopPanel>();
                 so = new SerializedObject(shop);
-                so.FindProperty("progress").objectReferenceValue = progress;
+                so.FindProperty("rack").objectReferenceValue = rack;
                 so.FindProperty("infoText").objectReferenceValue = info;
                 so.FindProperty("prevButton").objectReferenceValue = prev;
                 so.FindProperty("nextButton").objectReferenceValue = next;

@@ -128,30 +128,9 @@ namespace StudyXR.PiggySmash
             if (Time.time - lastHitTime < hitCooldown) return;
             lastHitTime = Time.time;
 
-            // 망치 성능 (공격력 / 범위). 없으면 기본 1타
+            // 망치 공격력만큼 타수를 깎는다 (없으면 1). 공격 범위는 망치 Head Hitter 콜라이더 크기
             var stats = collision.gameObject.GetComponentInParent<HammerStats>();
-            int damage = stats != null ? stats.Damage : 1;
-            Vector3 point = collision.contactCount > 0 ? collision.GetContact(0).point : transform.position;
-
-            TakeHit(collision.gameObject, damage);
-            if (stats != null && stats.SplashRadius > 0f) Splash(collision.gameObject, point, stats.SplashRadius, damage);
-        }
-
-        private static readonly Collider[] SplashBuffer = new Collider[32];
-
-        // 맞힌 지점 주변의 다른 광맥도 같은 공격력으로 맞힌다 (범위 망치)
-        private void Splash(GameObject breaker, Vector3 point, float radius, int damage)
-        {
-            int count = Physics.OverlapSphereNonAlloc(point, radius, SplashBuffer, ~0, QueryTriggerInteraction.Ignore);
-            var done = new System.Collections.Generic.HashSet<OreVein> { this };
-            for (int i = 0; i < count; ++i)
-            {
-                var other = SplashBuffer[i] != null ? SplashBuffer[i].GetComponentInParent<OreVein>() : null;
-                if (other == null || other.mined || done.Add(other) == false) continue;
-                if (Time.time - other.lastHitTime < other.hitCooldown) continue;
-                other.lastHitTime = Time.time;
-                other.TakeHit(breaker, damage);
-            }
+            TakeHit(collision.gameObject, stats != null ? stats.Damage : 1);
         }
 
         public void TakeHit(GameObject breaker) => TakeHit(breaker, 1);

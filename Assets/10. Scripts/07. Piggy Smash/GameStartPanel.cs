@@ -22,7 +22,7 @@ namespace StudyXR.PiggySmash
         [SerializeField] private bool hideWhileRunning = true;
 
         [Header("문구")]
-        [SerializeField] private string readyMessage = "ORE SMASH\n<size=60%>Grab the hammer and smash the ores!</size>";
+        [SerializeField] private string readyMessage = "대장장이\n<size=60%>망치를 들고 광석을 단조하세요!</size>";
         [SerializeField] private string startLabel = "START";
         [SerializeField] private string restartLabel = "RESTART";
 
