@@ -61,6 +61,11 @@ namespace StudyXR.Blacksmith
         [Tooltip("잡을 수 있는 망치에 덧붙일 외곽선 머티리얼 (Blacksmith/HammerHullOutline)")]
         [SerializeField] private Material outlineMaterial;
 
+        [Header("소리")]
+        [Tooltip("선택된 망치가 손을 떠난 채로 부딪힐 때 랜덤 재생 (Drop1~4)")]
+        [SerializeField] private AudioClip[] dropClips;
+        [Range(0f, 1f)] [SerializeField] private float dropVolume = 1f;
+
         private const string CoinsKey = "Blacksmith.Coins";
         private const string SelectedKey = "Blacksmith.Selected";
         private const string UnlockPrefix = "Blacksmith.Unlocked.";
@@ -112,6 +117,10 @@ namespace StudyXR.Blacksmith
                 e.visual = e.hammer.GetComponent<HammerVisual>();
                 if (e.visual == null) e.visual = e.hammer.AddComponent<HammerVisual>();
                 e.visual.Init(lockedMaterial, outlineMaterial);
+
+                var drop = e.hammer.GetComponent<HammerDropSound>();
+                if (drop == null) drop = e.hammer.AddComponent<HammerDropSound>();
+                drop.Init(dropClips, dropVolume);
             }
 
             // 처음 실행이면 1번 망치가 스탠드에 올라가 있다

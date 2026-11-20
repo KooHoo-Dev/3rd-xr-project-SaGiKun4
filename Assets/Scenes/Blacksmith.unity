@@ -92030,6 +92030,12 @@ MonoBehaviour:
   rackMargin: 0.2
   lockedMaterial: {fileID: 2100000, guid: c7515e95ce008e84a9b3da3c02e4038b, type: 2}
   outlineMaterial: {fileID: 2100000, guid: c918d3de62e4bec4b92197ce81a1dedc, type: 2}
+  dropClips:
+  - {fileID: 8300000, guid: 3e2c6ff062e432f4bb2f4f327f9e180d, type: 3}
+  - {fileID: 8300000, guid: bf71bb01f6523a84ca87cb066c803ce5, type: 3}
+  - {fileID: 8300000, guid: 5f5871ceb1466c5429f93d4da73ec526, type: 3}
+  - {fileID: 8300000, guid: 4ad62d10c4b3c4643829d190f1ca31f7, type: 3}
+  dropVolume: 1
 --- !u!4 &8052383134273997406
 Transform:
   m_ObjectHideFlags: 0
