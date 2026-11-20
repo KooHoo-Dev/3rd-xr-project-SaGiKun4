@@ -830,6 +830,10 @@ PrefabInstance:
       propertyPath: m_EnableComfortMode
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2971007470846784832, guid: 4e660da2419d1614198b2c073ddf863d, type: 3}
+      propertyPath: m_UseDistanceBasedVelocityScaling
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3115292631596432376, guid: 4e660da2419d1614198b2c073ddf863d, type: 3}
       propertyPath: m_RenderPostProcessing
       value: 1
@@ -897,6 +901,10 @@ PrefabInstance:
     - target: {fileID: 4838881153480763383, guid: 4e660da2419d1614198b2c073ddf863d, type: 3}
       propertyPath: m_RenderPostProcessing
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5200428540847827935, guid: 4e660da2419d1614198b2c073ddf863d, type: 3}
+      propertyPath: m_UseDistanceBasedVelocityScaling
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6947604102996551011, guid: 4e660da2419d1614198b2c073ddf863d, type: 3}
       propertyPath: m_Name
@@ -1083,11 +1091,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::StudyXR.PiggySmash.MalletHitter
   hitCollider: {fileID: 206802836}
   ownerBody: {fileID: 725764056}
-  measure: 0
-  minMomentum: 1.8
-  minSpeed: 2
+  swingStartSpeed: 1
+  minHitSpeed: 1.5
+  reverseAngle: 100
   holdSeconds: 0.08
+  bonusStartDistance: 0.2
+  bonusDistancePerPoint: 0.1
+  maxBonus: 9
   logHits: 0
+  drawSwingGizmo: 1
 --- !u!54 &206802838
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -4496,11 +4508,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::StudyXR.PiggySmash.MalletHitter
   hitCollider: {fileID: 1056256014}
   ownerBody: {fileID: 35263294}
-  measure: 0
-  minMomentum: 1.8
-  minSpeed: 2
+  swingStartSpeed: 1
+  minHitSpeed: 1.5
+  reverseAngle: 100
   holdSeconds: 0.08
+  bonusStartDistance: 0.2
+  bonusDistancePerPoint: 0.1
+  maxBonus: 9
   logHits: 0
+  drawSwingGizmo: 1
 --- !u!54 &1056256016
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -4646,8 +4662,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 261c05a5d161496b985651dd36690abe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StudyXR.PiggySmash.GrabDistanceLimiter
-  minDistance: 0
-  maxDistance: 1.5
+  minDistance: 0.1
+  maxDistance: 0.5
 --- !u!1 &1185806278
 GameObject:
   m_ObjectHideFlags: 0
@@ -4800,11 +4816,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::StudyXR.PiggySmash.MalletHitter
   hitCollider: {fileID: 1368013207}
   ownerBody: {fileID: 918999855}
-  measure: 0
-  minMomentum: 1.8
-  minSpeed: 2
+  swingStartSpeed: 1
+  minHitSpeed: 1.5
+  reverseAngle: 100
   holdSeconds: 0.08
+  bonusStartDistance: 0.2
+  bonusDistancePerPoint: 0.1
+  maxBonus: 9
   logHits: 0
+  drawSwingGizmo: 1
 --- !u!54 &1368013209
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -5610,11 +5630,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::StudyXR.PiggySmash.MalletHitter
   hitCollider: {fileID: 1583068991}
   ownerBody: {fileID: 2058870375}
-  measure: 0
-  minMomentum: 1.8
-  minSpeed: 2
+  swingStartSpeed: 1
+  minHitSpeed: 1.5
+  reverseAngle: 100
   holdSeconds: 0.08
+  bonusStartDistance: 0.2
+  bonusDistancePerPoint: 0.1
+  maxBonus: 9
   logHits: 0
+  drawSwingGizmo: 1
 --- !u!54 &1583068993
 Rigidbody:
   m_ObjectHideFlags: 0
