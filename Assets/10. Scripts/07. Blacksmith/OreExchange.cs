@@ -49,6 +49,16 @@ namespace StudyXR.Blacksmith
             new OrePrice { ore = "Silver", unitPrice = 20, minAmount = 1, maxAmount = 3 },
             new OrePrice { ore = "Gold", unitPrice = 45, minAmount = 1, maxAmount = 2 },
         };
+        [Header("납품 버튼 색")]
+        [Tooltip("납품 가능: 버튼 배경")]
+        [SerializeField] private Color availableColor = Color.white;
+        [Tooltip("납품 가능: 버튼 글씨")]
+        [SerializeField] private Color availableTextColor = new Color(0.15f, 0.15f, 0.15f, 1f);
+        [Tooltip("납품 불가: 버튼 배경")]
+        [SerializeField] private Color unavailableColor = new Color(0.78f, 0.2f, 0.2f, 1f);
+        [Tooltip("납품 불가: 버튼 글씨")]
+        [SerializeField] private Color unavailableTextColor = Color.white;
+
         [Tooltip("의뢰 보상 = 개수 × 단가 × 이 범위의 랜덤 배율")]
         [SerializeField] private Vector2 rewardMultiplier = new Vector2(0.9f, 1.3f);
 
@@ -69,7 +79,11 @@ namespace StudyXR.Blacksmith
             for (int i = 0; i < slots.Length; ++i)
             {
                 int index = i;
-                if (slots[i].button != null) slots[i].button.onClick.AddListener(() => Deliver(index));
+                if (slots[i].button != null)
+                {
+                    slots[i].button.onClick.AddListener(() => Deliver(index));
+                    ApplyButtonColors(slots[i].button);
+                }
                 if (Load(i) == false) Roll(i);
             }
             if (inventory != null) inventory.Changed += Refresh;
@@ -142,8 +156,26 @@ namespace StudyXR.Blacksmith
                         $"{OreInventory.Label(slot.ore)} × {slot.amount}  →  {slot.reward} 코인\n" +
                         $"<size=65%><color={color}>보유 {have}개</color></size>";
                 }
-                if (slot.button != null) slot.button.interactable = enough;
+                if (slot.button != null)
+                {
+                    slot.button.interactable = enough;
+                    var label = slot.button.GetComponentInChildren<TMP_Text>(true);
+                    if (label != null) label.color = enough ? availableTextColor : unavailableTextColor;
+                }
             }
+        }
+
+        // 버튼 배경: 가능 = availableColor(흰색), 불가(비활성) = unavailableColor(붉은색)
+        private void ApplyButtonColors(Button button)
+        {
+            var c = button.colors;
+            c.normalColor = availableColor;
+            c.selectedColor = availableColor;
+            c.highlightedColor = availableColor * 0.85f;
+            c.pressedColor = availableColor * 0.7f;
+            c.disabledColor = unavailableColor;
+            c.colorMultiplier = 1f;
+            button.colors = c;
         }
 
         [ContextMenu("Reroll Orders (의뢰 새로 받기)")]

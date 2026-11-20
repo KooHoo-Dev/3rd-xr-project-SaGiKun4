@@ -46,7 +46,7 @@ namespace StudyXR.Blacksmith
         private void Awake()
         {
             if (inventory == null) inventory = FindAnyObjectByType<OreInventory>();
-            // 점수판: 맨 위에 타이틀, 그 아래 남은 시간
+            // 점수판: 대기 중엔 타이틀, 라운드 중엔 같은 자리에 남은 시간
             if (boardText != null) boardText.alignment = TextAlignmentOptions.Top;
         }
 
@@ -136,8 +136,9 @@ namespace StudyXR.Blacksmith
             if (visible == false) return;
 
             lastShownSeconds = Mathf.CeilToInt(remaining);
+            // 라운드 중에는 타이틀 자리에 남은 시간을 그대로 띄운다 (아래 Ore Board 와 겹치지 않도록 한 줄만)
             if (IsRunning && roundSeconds > 0f)
-                boardText.text = $"{title}\n<size=50%>남은 시간  {lastShownSeconds}</size>";
+                boardText.text = $"남은 시간 {lastShownSeconds}";
             else
                 boardText.text = title;
         }
