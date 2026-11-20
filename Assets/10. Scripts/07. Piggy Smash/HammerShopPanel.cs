@@ -5,8 +5,8 @@ using UnityEngine.UI;
 namespace StudyXR.PiggySmash
 {
     /// <summary>
-    /// 시작 패널 안의 망치 고르기. &lt; / &gt; 로 망치를 넘기고, 가운데 버튼으로
-    /// 잠긴 망치는 코인으로 해금(BUY), 해금된 망치는 선택(SELECT)한다.
+    /// 망치 선반 위의 상점 UI. &lt; / &gt; 로 망치를 넘기고, 가운데 버튼으로 코인을 써서 해금(BUY)한다.
+    /// 선택은 여기서 하지 않는다 — 해금된 망치를 직접 스탠드에 올려야 선택된다.
     /// </summary>
     public class HammerShopPanel : MonoBehaviour
     {
@@ -35,8 +35,13 @@ namespace StudyXR.PiggySmash
 
         private void OnEnable()
         {
-            // 패널이 다시 보일 때는 지금 선택된 망치부터
-            if (rack != null) index = rack.Selected;
+            // 처음에는 아직 해금하지 않은 첫 망치부터 보여준다
+            if (rack != null)
+            {
+                index = 0;
+                for (int i = 0; i < rack.Count; ++i)
+                    if (rack.IsUnlocked(i) == false) { index = i; break; }
+            }
             Refresh();
         }
 
@@ -50,8 +55,7 @@ namespace StudyXR.PiggySmash
         private void OnAction()
         {
             if (rack == null) return;
-            if (rack.IsUnlocked(index)) rack.Select(index);
-            else rack.Unlock(index);
+            rack.Unlock(index);
             Refresh();
         }
 
@@ -65,24 +69,16 @@ namespace StudyXR.PiggySmash
                 return;
             }
 
+            bool unlocked = rack.IsUnlocked(index);
             if (infoText != null)
             {
                 infoText.text =
                     $"<size=70%>코인  {rack.Coins}</size>\n" +
                     $"{entry.displayName}  <size=60%>({index + 1}/{rack.Count})</size>\n" +
-                    $"<size=70%>공격력  {entry.damage}</size>";
+                    $"<size=70%>공격력  {entry.damage}{(unlocked ? "   |   보유 중" : "")}</size>";
             }
-
-            bool unlocked = rack.IsUnlocked(index);
-            bool selected = index == rack.Selected;
-            string label;
-            bool interactable;
-            if (selected) { label = "SELECTED"; interactable = false; }
-            else if (unlocked) { label = "SELECT"; interactable = true; }
-            else { label = $"BUY  {entry.cost}"; interactable = rack.CanAfford(index); }
-
-            if (actionLabel != null) actionLabel.text = label;
-            if (actionButton != null) actionButton.interactable = interactable && rack.CanChange;
+            if (actionLabel != null) actionLabel.text = unlocked ? "OWNED" : $"BUY  {entry.cost}";
+            if (actionButton != null) actionButton.interactable = unlocked == false && rack.CanAfford(index);
         }
     }
 }

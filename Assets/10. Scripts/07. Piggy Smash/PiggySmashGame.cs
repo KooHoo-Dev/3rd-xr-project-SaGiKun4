@@ -136,6 +136,9 @@ namespace StudyXR.PiggySmash
 
         private void OnRestartPerformed(InputAction.CallbackContext _)
         {
+            // 스탠드에 올린 망치가 없으면 시작하지 않는다
+            var rack = FindAnyObjectByType<HammerRack>();
+            if (rack != null && rack.HasSelection == false) return;
             StartRound();
         }
 
